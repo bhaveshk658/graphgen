@@ -10,4 +10,5 @@ import time
 
 from interact import distance
 
+print(2)
 print(distance(0, 0, 0, 2))
