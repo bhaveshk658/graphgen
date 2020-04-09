@@ -37,18 +37,37 @@ def plot_all_data(data):
 	plt.title("All Data Points")
 	plt.xlabel("X-Coordinate")
 	plt.ylabel("Y-Coordinate")
-	plt.show()
 
 def get_clusters(data):
 	'''
 	Perform k-means clustering on data.
 	Returns array of clusters (coordinates).
 	'''
-	
+	temp = data.to_numpy()
+	temp = np.vstack((temp[:, 4], temp[:, 5])).T
+	Kmean = KMeans(n_clusters=250)
+	Kmean.fit(temp)
+	centroids = Kmean.cluster_centers_
+	return centroids
+
+def plot_clusters(data):
+	'''
+	Perform k-means clustering on data and plots.
+	No return.
+	'''
+	centroids = get_clusters(data)
+	for i in range(len(centroids)):
+		plt.scatter(centroids[i][0], centroids[i][1], s=10, c='r')
+
+
 
 
 if __name__ == "__main__":
-	data = get_training_data(4, "DR_USA_Roundabout_EP")
+	data = get_training_data(2, "DR_USA_Roundabout_EP")
+	plot_all_data(data)
+	plot_clusters(data)
+	plt.show()
+
 
 
 
