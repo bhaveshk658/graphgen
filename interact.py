@@ -62,7 +62,7 @@ Kmean = KMeans(n_clusters=250)
 Kmean.fit(total_data)
 centroids = Kmean.cluster_centers_
 for i in range(len(centroids)):
-	plt.scatter(centroids[i][0], centroids[i][1], s=20, c='r')
+	plt.scatter(centroids[i][0], centroids[i][1], s=10)
 
 ###Cars of interest - 16, 23 ###
 
@@ -164,8 +164,8 @@ plt.figure(2)
 plt.title("Distance to merge point versus time")
 plt.xlabel("Time (ms)")
 plt.ylabel("Distance to point on path closest to merge point")
-plt.plot(dist_16[:, 0], dist_16[:, 1], c='r')
-plt.plot(dist_23[:, 0], dist_23[:, 1], c='b')
+plt.plot(dist_16[:, 0], dist_16[:, 1], c='b')
+plt.plot(dist_23[:, 0], dist_23[:, 1], c='r')
 
 plt.show()
 
