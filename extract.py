@@ -9,21 +9,54 @@ import os
 import time
 
 from interact_toolset import distance
+from frechetdist import frdist
+
+from dipy.segment.metric import Metric
+from dipy.segment.metric import ResampleFeature
+from dipy.segment.clustering import QuickBundles
+from dipy.segment.metric import AveragePointwiseEuclideanMetric
+
+  box = [[960, 1015], [980, 1040]]
+
+class FrechetDistance(Metric):
+	'''
+	Computes Frechet Distance between two trajectories.
+	'''
+	def __init__(self):
+		super(FrechetDistance, self).__init__(feature=ResampleFeature(nb_points=256))
+
+	def are_compatible(self, shape1, shape2):
+		return len(shape1) == len(shape2)
+
+	def dist(self, v1, v2):
+		return frdist(v1, v2)
+
 
 def get_training_data(k, location):
 	'''
 	Get training data from k files from string location.
 	E.g. get_training_data(4, "DR_USA_Roundabout_EP")
-	Returns a dataframe of k files compiled together.
+	Returns a dataframe of k files compiled together +
+	A list of all traces
 	'''
 	frames = []
+	traces = []
 
 	for i in range(k):
-		data = pd.read_csv(os.path.join("interaction-dataset-copy/recorded_trackfiles/"
-			+location, "vehicle_tracks_00"+str(k)+".csv"))
+		path = os.path.join("interaction-dataset-copy/recorded_trackfiles/"
+			+location, "vehicle_tracks_00"+str(i)+".csv")
+		data = pd.read_csv(path)
 		frames.append(data)
 
-	return pd.concat(frames)
+		for j in range(len(data.index)):
+			temp = data.loc[(data['track_id'] == j)]
+			temp = temp.to_numpy()
+			temp = np.vstack((temp[:, 4], temp[:, 5])).T
+			traces.append(temp)
+
+
+
+	return (pd.concat(frames), traces)
 
 def plot_all_data(data):
 	'''
@@ -63,10 +96,20 @@ def plot_clusters(data):
 
 
 if __name__ == "__main__":
-	data = get_training_data(2, "DR_USA_Roundabout_EP")
-	plot_all_data(data)
-	plot_clusters(data)
-	plt.show()
+	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
+	temp = []
+	for i in traces:
+		if len(i) != 0:
+			temp.append(i)
+	feature = ResampleFeature(nb_points=256)
+	metric = FrechetDistance()
+	qb = QuickBundles(threshold=7, metric=metric)
+	clusters = qb.cluster(temp)
+	
+
+
+
+
 
 
 
