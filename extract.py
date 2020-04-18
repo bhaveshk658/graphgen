@@ -95,7 +95,7 @@ def plot_clusters(data):
 
 
 def quick_bundles(data):
-	qb = QuickBundles(threshold=10)
+	qb = QuickBundles(threshold=5)
 	clusters = qb.cluster(data)
 	return clusters
 
