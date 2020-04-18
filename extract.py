@@ -4,6 +4,7 @@ import pandas as pd
 
 from sklearn.cluster import KMeans
 from math import hypot
+from matplotlib.pyplot import cm
 
 import os
 import time
@@ -16,7 +17,6 @@ from dipy.segment.metric import ResampleFeature
 from dipy.segment.clustering import QuickBundles
 from dipy.segment.metric import AveragePointwiseEuclideanMetric
 
-  box = [[960, 1015], [980, 1040]]
 
 class FrechetDistance(Metric):
 	'''
@@ -46,6 +46,9 @@ def get_training_data(k, location):
 		path = os.path.join("interaction-dataset-copy/recorded_trackfiles/"
 			+location, "vehicle_tracks_00"+str(i)+".csv")
 		data = pd.read_csv(path)
+		box = [[960, 1015], [980, 1040]]
+		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1])
+    					& (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 		frames.append(data)
 
 		for j in range(len(data.index)):
@@ -93,18 +96,28 @@ def plot_clusters(data):
 		plt.scatter(centroids[i][0], centroids[i][1], s=10, c='r')
 
 
+def quick_bundles(data):
+	qb = QuickBundles(threshold=10)
+	clusters=qb.cluster(data)
+	color=iter(cm.rainbow(np.linspace(0,1,len(clusters))))
+	for i in range(len(clusters)):
+		c = next(color)
+		if len(clusters[i].indices) < 4:
+			continue
+		for j in clusters[i].indices:
+			plt.plot(temp[j][:, 0], temp[j][:, 1], c=c)
+
+	plt.show()
+	return clusters
 
 
 if __name__ == "__main__":
-	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
+	(data, traces) = get_training_data(4, "DR_USA_Roundabout_EP")
 	temp = []
 	for i in traces:
 		if len(i) != 0:
 			temp.append(i)
-	feature = ResampleFeature(nb_points=256)
-	metric = FrechetDistance()
-	qb = QuickBundles(threshold=7, metric=metric)
-	clusters = qb.cluster(temp)
+	clusters = quick_bundles(temp)
 	
 
 
