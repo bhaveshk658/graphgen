@@ -79,10 +79,8 @@ def get_clusters(data):
 	Perform k-means clustering on data.
 	Returns array of clusters (coordinates).
 	'''
-	temp = data.to_numpy()
-	temp = np.vstack((temp[:, 4], temp[:, 5])).T
-	Kmean = KMeans(n_clusters=250)
-	Kmean.fit(temp)
+	Kmean = KMeans(n_clusters=15)
+	Kmean.fit(data)
 	centroids = Kmean.cluster_centers_
 	return centroids
 
@@ -98,16 +96,7 @@ def plot_clusters(data):
 
 def quick_bundles(data):
 	qb = QuickBundles(threshold=10)
-	clusters=qb.cluster(data)
-	color=iter(cm.rainbow(np.linspace(0,1,len(clusters))))
-	for i in range(len(clusters)):
-		c = next(color)
-		if len(clusters[i].indices) < 4:
-			continue
-		for j in clusters[i].indices:
-			plt.plot(temp[j][:, 0], temp[j][:, 1], c=c)
-
-	plt.show()
+	clusters = qb.cluster(data)
 	return clusters
 
 
@@ -118,6 +107,30 @@ if __name__ == "__main__":
 		if len(i) != 0:
 			temp.append(i)
 	clusters = quick_bundles(temp)
+	color = iter(cm.rainbow(np.linspace(0,1,len(clusters))))
+	plt.figure(1)
+	for i in range(len(clusters)):
+		c = next(color)
+		if len(clusters[i].indices) < 4:
+			continue
+		for j in clusters[i].indices:
+			plt.plot(temp[j][:, 0], temp[j][:, 1], c=c)
+
+
+	plt.figure(2)
+	color = iter(cm.rainbow(np.linspace(0,1,len(clusters))))
+	for i in clusters:
+		c = next(color)
+		lane_traces = temp[i.indices[0]]
+		for j in i.indices[1:]:
+			lane_traces = np.concatenate((lane_traces, temp[j]))
+
+		centroids = get_clusters(lane_traces)
+		plt.scatter(centroids[:, 0], centroids[:, 1], s=10, c=c)
+
+	plt.show()
+
+
 	
 
 
