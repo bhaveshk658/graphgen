@@ -31,6 +31,11 @@ class FrechetDistance(Metric):
 	def dist(self, v1, v2):
 		return frdist(v1, v2)
 
+def compute_headings(data):
+	headings = []
+	velocities = data[:, 3:]
+
+
 
 def get_training_data(k, location):
 	'''
@@ -51,15 +56,33 @@ def get_training_data(k, location):
     					& (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 		frames.append(data)
 
-		for j in range(len(data.index)):
+		for j in range(100):
 			temp = data.loc[(data['track_id'] == j)]
 			temp = temp.to_numpy()
-			temp = np.vstack((temp[:, 4], temp[:, 5])).T
+			temp = np.vstack((temp[:, 4], temp[:, 5], temp[:, 2], temp[:, 6], temp[:, 7])).T
 			traces.append(temp)
 
 
+		traces_copy = []
+		for i in traces:
+			if len(i) != 0:
+				traces_copy.append(i)
 
-	return (pd.concat(frames), traces)
+
+		x_axis = [1, 0]
+		for i in range(len(traces_copy)):
+			for j in range(len(traces_copy[i])):
+				velocity = traces_copy[i][j][3:]
+				length = np.linalg.norm(velocity)
+				if (length == 0):
+					heading = 0
+				else:
+					heading = np.arccos(np.dot(velocity/length, [1, 0]))
+				traces_copy[i][j][3] = heading
+
+
+
+	return (pd.concat(frames), traces_copy)
 
 def plot_all_data(data):
 	'''
@@ -94,19 +117,9 @@ def plot_clusters(data):
 		plt.scatter(centroids[i][0], centroids[i][1], s=10, c='r')
 
 
-def quick_bundles(data):
+def quick_bundles(data): #### need to modify for updated data ####
 	qb = QuickBundles(threshold=5)
 	clusters = qb.cluster(data)
-	return clusters
-
-
-if __name__ == "__main__":
-	(data, traces) = get_training_data(4, "DR_USA_Roundabout_EP")
-	temp = []
-	for i in traces:
-		if len(i) != 0:
-			temp.append(i)
-	clusters = quick_bundles(temp)
 	color = iter(cm.rainbow(np.linspace(0,1,len(clusters))))
 	plt.figure(1)
 	for i in range(len(clusters)):
@@ -114,21 +127,30 @@ if __name__ == "__main__":
 		if len(clusters[i].indices) < 4:
 			continue
 		for j in clusters[i].indices:
-			plt.plot(temp[j][:, 0], temp[j][:, 1], c=c)
+			plt.plot(data[j][:, 0], data[j][:, 1], c=c)
 
 
 	plt.figure(2)
 	color = iter(cm.rainbow(np.linspace(0,1,len(clusters))))
 	for i in clusters:
 		c = next(color)
-		lane_traces = temp[i.indices[0]]
+		lane_traces = data[i.indices[0]]
 		for j in i.indices[1:]:
-			lane_traces = np.concatenate((lane_traces, temp[j]))
+			lane_traces = np.concatenate((lane_traces, data[j]))
 
 		centroids = get_clusters(lane_traces)
 		plt.scatter(centroids[:, 0], centroids[:, 1], s=10, c=c)
-
+	
 	plt.show()
+
+
+if __name__ == "__main__":
+	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
+	
+
+
+
+
 
 
 	
