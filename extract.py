@@ -212,7 +212,7 @@ def to_merge(candidate, G):
 	d2 = distance(closest[1].x, closest[1].y, proj_point[0], proj_point[1])
 	angle = abs(candidate.heading - closest[0].heading)
 
-	if (h < 50) and (angle < 0.5):
+	if (h < 50) and (angle < 0.5): #decrease h?
 		if (d1 < d2):
 			return (True, closest, closest[0], d1)
 		else:
