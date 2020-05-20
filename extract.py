@@ -54,7 +54,7 @@ def get_training_data(n, location):
 		path = os.path.join("interaction-dataset-copy/recorded_trackfiles/"
 			+location, "vehicle_tracks_00"+str(i)+".csv")
 		data = pd.read_csv(path)
-		box = [[960, 1015], [980, 1040]]
+		box = [[960, 1005], [980, 1040]]
 		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 		frames.append(data)
 
@@ -190,15 +190,23 @@ def edge_heading(p1, p2):
 	else:
 		return np.arccos(np.dot(vector/length, [1, 0]))
 
+def dist_point_to_line(candidate, node1, node2):
+	area = abs(0.5*np.linalg.det(np.array([[candidate.x, candidate.y, 1],
+									   [node1.x, node1.y, 1],
+									   [node2.x, node2.y, 1]])))
+	distance = ((node2.y - node1.y)**2 + (node2.x - node1.x)**2)**0.5
+
+	return 2*area/distance
+
 
 def to_merge(candidate, G):
 	if len(G.edges) == 0:
 		return (False, 0, 0, 0)
 	edges = [e for e in G.edges]
 	closest = edges[0]
-	closest_dist = node_dist(candidate, closest[0]) + node_dist(candidate, closest[1])
+	closest_dist = dist_point_to_line(candidate, closest[0], closest[1])
 	for edge in edges[1:]:
-		temp_dist = node_dist(candidate, edge[0]) + node_dist(candidate, edge[1])
+		temp_dist = dist_point_to_line(candidate, edge[0], edge[1])
 		if temp_dist < closest_dist:
 			closest = edge
 	edge_vector = np.array([closest[1].x - closest[0].x, closest[1].y - closest[0].y])
@@ -212,7 +220,7 @@ def to_merge(candidate, G):
 	d2 = distance(closest[1].x, closest[1].y, proj_point[0], proj_point[1])
 	angle = abs(candidate.heading - closest[0].heading)
 
-	if (h < 50) and (angle < 0.5): #decrease h?
+	if (h < 10) and (angle < 0.25): #decrease h?
 		if (d1 < d2):
 			return (True, closest, closest[0], d1)
 		else:
@@ -226,33 +234,38 @@ def to_merge(candidate, G):
 
 
 if __name__ == "__main__":
-	(data, traces) = get_training_data(4, "DR_USA_Roundabout_EP")
+	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
 	points = [item for sublist in traces for item in sublist]
 	G = nx.DiGraph()
-	dist_tol = 30
-	head_tol = 0.5
 
+	total = 0
 	#Preprocessing
 	trips = []
 	for c in traces:
-		if (len(c) < 50):
+		if (len(c) < 25):
 			continue
 		trip = []
 		point = c[0]
 		for i in range(1, len(c)):
-			if dist(point, c[i]) < 3:
+			total += 1
+			if dist(point, c[i]) < 1:
 				continue
 			trip.append(Node(c[i][0], c[i][1], c[i][-1]))
 			point = c[i]
 
 		trips.append(np.array(trip))
 
-
+	#Algorithm
+	counter = 0
+	merge_counter = 0
+	other_counter = 0
 	for trip in trips:
 		prevNode = None
 		for n in trip:
+			counter += 1
 			(merge, closest_edge, closest_node, short_projection_distance) = to_merge(n, G)
 			if merge:
+				merge_counter += 1
 				if short_projection_distance > 100:
 					G.remove_edge(closest_edge[0], closest_edge[1])
 					G.add_edge(closest_node, n)
@@ -267,6 +280,7 @@ if __name__ == "__main__":
 					prevNode = n
 
 			else:
+				other_counter += 1
 				G.add_node(n)
 				if prevNode is not None:
 					G.add_edge(prevNode, n)
@@ -276,7 +290,11 @@ if __name__ == "__main__":
 	for node in G:
 		pos[node] = [node.x, node.y]
 
-	nx.draw(G, pos, node_size=50)
+	nx.draw(G, pos, node_size=10)
+	print(total)
+	print(counter)
+	print(merge_counter)
+	print(other_counter)
 	plt.show()
 
 
