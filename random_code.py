@@ -1,49 +1,61 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
-import matplotlib
-import matplotlib.animation as animation
-
-import collections
-
-from sklearn.cluster import KMeans
-
-from math import hypot
+from dipy.segment.metric import Metric
+from dipy.segment.metric import ResampleFeature
+from dipy.segment.clustering import QuickBundles
+from dipy.segment.metric import AveragePointwiseEuclideanMetric
 
 
-import os
-import time
+class FrechetDistance(Metric):
+	'''
+	Computes Frechet Distance between two trajectories.
+	'''
+	def __init__(self):
+		super(FrechetDistance, self).__init__(feature=ResampleFeature(nb_points=256))
 
-def distance(x1, y1, x2, y2):
-	return pow((pow(x1 - x2, 2) + pow(y1 - y2, 2)), 0.5)
+	def are_compatible(self, shape1, shape2):
+		return len(shape1) == len(shape2)
 
-
-def arclength(f, a, b, tol=1e-6):
-    """Compute the arc length of function f(x) for a <= x <= b. Stop
-    when two consecutive approximations are closer than the value of
-    tol.
-    """
-    nsteps = 1  # number of steps to compute
-    oldlength = 1.0e20
-    length = 1.0e10
-    while abs(oldlength - length) >= tol:
-        nsteps *= 2
-        fx1 = f(a)
-        xdel = (b - a) / nsteps  # space between x-values
-        oldlength = length
-        length = 0
-        for i in range(1, nsteps + 1):
-            fx0 = fx1  # previous function value
-            fx1 = f(a + i * (b - a) / nsteps)  # new function value
-            length += hypot(xdel, fx1 - fx0)  # length of small line segment
-    return length
+	def dist(self, v1, v2):
+		return frdist(v1, v2)
 
 
+counter = 0
+merge_counter = 0
+other_counter = 0
+for trip in trips:
+	prevNode = None
+	for n in trip:
+		counter += 1
+		(merge, closest_edge, closest_node, short_projection_distance) = to_merge(n, G)
+		if merge:
+			merge_counter += 1
+			if short_projection_distance > 1:
+				if node_dist(n,closest_edge[0]) > 15 or node_dist(n,closest_edge[1]) > 15:
+					continue
+				G.add_edge(closest_edge[0], n)
+				G.add_edge(n, closest_edge[1])
+				G.remove_edge(closest_edge[0], closest_edge[1])
+				#check = True
+			else:
+				closest_node.merge(n)
+				n = closest_node
+				#check = False
+				print(nx.has_path(G, prevNode, n))
+				if prevNode is not None and nx.has_path(G, prevNode, n) and len(nx.shortest_path(G, prevNode, n)) > 2:
+					print("hi")
+					G.add_edge(prevNode, n)
+					prevNode = n
 
-### Basic parameters ###
+		else:
+			other_counter += 1
+			if prevNode is not None and node_dist(n, prevNode) > 15:
+				continue
+			G.add_node(n)
+			if prevNode is not None:
+				G.add_edge(prevNode, n)
+			prevNode = n
 
-if __name__ == "__main__":
+
+
 
     data = pd.read_csv(os.path.join("interaction-dataset-copy/recorded_trackfiles/DR_USA_Roundabout_EP", "vehicle_tracks_000.csv"))
     box = [[975, 1000], [985, 1010]]
@@ -172,6 +184,3 @@ if __name__ == "__main__":
     plt.plot(dist_23[:, 0], dist_23[:, 1], c='r')
 
     plt.show()
-
-
-

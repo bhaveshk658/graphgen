@@ -3,42 +3,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from sklearn.cluster import KMeans
-from math import hypot
-from matplotlib.pyplot import cm
 
 import os
-import time
 
-from interact_toolset import distance
-from frechetdist import frdist
+from utils import distance
+from utils import dist
+from utils import dist_point_to_line
 
-from dipy.segment.metric import Metric
-from dipy.segment.metric import ResampleFeature
-from dipy.segment.clustering import QuickBundles
-from dipy.segment.metric import AveragePointwiseEuclideanMetric
-
-import random
 import networkx as nx
-
-
-class FrechetDistance(Metric):
-	'''
-	Computes Frechet Distance between two trajectories.
-	'''
-	def __init__(self):
-		super(FrechetDistance, self).__init__(feature=ResampleFeature(nb_points=256))
-
-	def are_compatible(self, shape1, shape2):
-		return len(shape1) == len(shape2)
-
-	def dist(self, v1, v2):
-		return frdist(v1, v2)
-
-def compute_headings(data):
-	headings = []
-	velocities = data[:, 3:]
-
-
 
 def get_training_data(n, location):
 	'''
@@ -54,7 +26,8 @@ def get_training_data(n, location):
 		path = os.path.join("interaction-dataset-copy/recorded_trackfiles/"
 			+location, "vehicle_tracks_00"+str(i)+".csv")
 		data = pd.read_csv(path)
-		box = [[960, 1005], [980, 1040]]
+		box = [[960, 1010], [985, 1040]]
+		#box = [[0, 10000], [0, 10000]]
 		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 		frames.append(data)
 
@@ -64,12 +37,10 @@ def get_training_data(n, location):
 			temp = np.vstack((temp[:, 4], temp[:, 5], temp[:, 2], temp[:, 6], temp[:, 7])).T
 			traces.append(temp)
 
-
 		traces_copy = []
 		for trace in traces:
 			if len(trace) != 0:
 				traces_copy.append(trace)
-
 
 		x_axis = [1, 0]
 		for j in range(len(traces_copy)):
@@ -82,68 +53,18 @@ def get_training_data(n, location):
 					heading = np.arccos(np.dot(velocity/length, [1, 0]))
 				traces_copy[j][k][3] = heading
 
-
-
 	return (pd.concat(frames), traces_copy)
 
-def plot_all_data(data):
-	'''
-	Plots data returned by get_training_data.
-	Allows us to get visualization of what the map can look like.
-	Isolates x and y coordinates from dataframe and plots.
-	'''
-	temp = data.to_numpy()
-	temp = np.vstack((temp[:, 4], temp[:, 5])).T
-	plt.scatter(temp[:, 0], temp[:, 1], s=1)
-	plt.title("All Data Points")
-	plt.xlabel("X-Coordinate")
-	plt.ylabel("Y-Coordinate")
 
 def get_clusters(data):
 	'''
 	Perform k-means clustering on data.
 	Returns array of clusters (coordinates).
 	'''
-	Kmean = KMeans(n_clusters=15)
+	Kmean = KMeans(n_clusters=200)
 	Kmean.fit(data)
 	centroids = Kmean.cluster_centers_
 	return centroids
-
-def plot_clusters(data):
-	'''
-	Perform k-means clustering on data and plots.
-	No return.
-	'''
-	centroids = get_clusters(data)
-	for i in range(len(centroids)):
-		plt.scatter(centroids[i][0], centroids[i][1], s=10, c='r')
-
-
-def quick_bundles(data): #### need to modify for updated data ####
-	qb = QuickBundles(threshold=5)
-	clusters = qb.cluster(data)
-	color = iter(cm.rainbow(np.linspace(0,1,len(clusters))))
-	plt.figure(1)
-	for i in range(len(clusters)):
-		c = next(color)
-		if len(clusters[i].indices) < 4:
-			continue
-		for j in clusters[i].indices:
-			plt.plot(data[j][:, 0], data[j][:, 1], c=c)
-
-
-	plt.figure(2)
-	color = iter(cm.rainbow(np.linspace(0,1,len(clusters))))
-	for i in clusters:
-		c = next(color)
-		lane_traces = data[i.indices[0]]
-		for j in i.indices[1:]:
-			lane_traces = np.concatenate((lane_traces, data[j]))
-
-		centroids = get_clusters(lane_traces)
-		plt.scatter(centroids[:, 0], centroids[:, 1], s=10, c=c)
-	
-	plt.show()
 
 
 class Node:
@@ -164,41 +85,6 @@ class Node:
 		self.heading = sum(prev_heading)/len(prev_heading)
 
 
-
-def dist(point1, point2):
-
-	return distance(point1[0], point1[1], point2[0], point2[1])
-
-def node_dist(node1, node2):
-
-	return distance(node1.x, node1.y, node2.x, node2.y)
-
-def edge_dist(p1, p2, p3):
-	p1 = np.array(p1)
-	p2 = np.array(p2)
-	p3 = np.array(p3)
-	dist = np.linalg.norm(p2 - p1)
-	if dist == 0:
-		return distance(p1[0], p1[1], p3[0], p3[1])
-	return np.cross(p2 - p1, p3 - p1) / np.linalg.norm(p2 - p1)
-
-def edge_heading(p1, p2):
-	vector = np.subtract(p2, p1)
-	length = np.linalg.norm(vector)
-	if (length == 0):
-		return 0
-	else:
-		return np.arccos(np.dot(vector/length, [1, 0]))
-
-def dist_point_to_line(candidate, node1, node2):
-	area = abs(0.5*np.linalg.det(np.array([[candidate.x, candidate.y, 1],
-									   [node1.x, node1.y, 1],
-									   [node2.x, node2.y, 1]])))
-	distance = ((node2.y - node1.y)**2 + (node2.x - node1.x)**2)**0.5
-
-	return 2*area/distance
-
-
 def to_merge(candidate, G):
 	if len(G.edges) == 0:
 		return (False, 0, 0, 0)
@@ -215,12 +101,13 @@ def to_merge(candidate, G):
 	proj = np.multiply((np.dot(candidate_vector, edge_vector)/np.dot(edge_vector, edge_vector)), edge_vector)
 	proj_point = np.add(proj, np.array([closest[0].x, closest[0].y]))
 
-	h = distance(candidate.x, candidate.y, proj_point[0], proj_point[1])
+	h = dist_point_to_line(candidate, closest[0], closest[1])
 	d1 = distance(closest[0].x, closest[0].y, proj_point[0], proj_point[1])
 	d2 = distance(closest[1].x, closest[1].y, proj_point[0], proj_point[1])
 	angle = abs(candidate.heading - closest[0].heading)
 
-	if (h < 10) and (angle < 0.25): #decrease h?
+
+	if (h < 0.2) and (angle < 0.4): #decrease h?
 		if (d1 < d2):
 			return (True, closest, closest[0], d1)
 		else:
@@ -233,21 +120,20 @@ def to_merge(candidate, G):
 
 
 
+
 if __name__ == "__main__":
 	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
-	points = [item for sublist in traces for item in sublist]
+	points = np.array([item for sublist in traces for item in sublist])
 	G = nx.DiGraph()
-
-	total = 0
+	
 	#Preprocessing
 	trips = []
 	for c in traces:
-		if (len(c) < 25):
+		if (len(c) < 50):
 			continue
 		trip = []
 		point = c[0]
 		for i in range(1, len(c)):
-			total += 1
 			if dist(point, c[i]) < 1:
 				continue
 			trip.append(Node(c[i][0], c[i][1], c[i][-1]))
@@ -255,46 +141,27 @@ if __name__ == "__main__":
 
 		trips.append(np.array(trip))
 
-	#Algorithm
-	counter = 0
-	merge_counter = 0
-	other_counter = 0
-	for trip in trips:
+	#Algorithm based on paper by Cao and Krumm, Microsoft
+	for t in trips:
 		prevNode = None
-		for n in trip:
-			counter += 1
+		for n in t:
 			(merge, closest_edge, closest_node, short_projection_distance) = to_merge(n, G)
 			if merge:
-				merge_counter += 1
-				if short_projection_distance > 100:
-					G.remove_edge(closest_edge[0], closest_edge[1])
-					G.add_edge(closest_node, n)
-					G.add_edge(n, closest_node)
-					check = True
-				else:
-					closest_node.merge(n)
-					n = closest_node
-					check = False
-				if check and prevNode is not None and nx.has_path(G, prevNode, n) and len(nx.shortest_path(G, prevNode, n)) > 6:
-					G.add_edge(prevNode, n)
-					prevNode = n
-
+				if prevNode is not None and nx.has_path(G, prevNode, closest_node) and len(nx.shortest_path(G, prevNode, closest_node)) > 5:
+					G.add_edge(prevNode, closest_node)
+					prevNode = closest_node
 			else:
-				other_counter += 1
 				G.add_node(n)
 				if prevNode is not None:
 					G.add_edge(prevNode, n)
 				prevNode = n
 
+
 	pos = {}
 	for node in G:
 		pos[node] = [node.x, node.y]
-
+	
 	nx.draw(G, pos, node_size=10)
-	print(total)
-	print(counter)
-	print(merge_counter)
-	print(other_counter)
 	plt.show()
 
 
