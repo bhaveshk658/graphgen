@@ -26,8 +26,8 @@ def get_training_data(n, location):
 		path = os.path.join("interaction-dataset-copy/recorded_trackfiles/"
 			+location, "vehicle_tracks_00"+str(i)+".csv")
 		data = pd.read_csv(path)
-		box = [[960, 1010], [985, 1040]]
-		#box = [[0, 10000], [0, 10000]]
+		#box = [[960, 1010], [985, 1040]]
+		box = [[0, 10000], [0, 10000]]
 		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 		frames.append(data)
 
