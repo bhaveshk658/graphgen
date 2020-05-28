@@ -4,12 +4,15 @@ import pandas as pd
 import seaborn as sns
 import matplotlib
 import matplotlib.animation as animation
+from matplotlib import cm
 
 import collections
 
 from sklearn.cluster import KMeans
 
 from math import hypot
+
+from dipy.segment.clustering import QuickBundles
 
 
 import os
@@ -56,7 +59,16 @@ def plot_all_data(data):
     plt.xlabel("X-Coordinate")
     plt.ylabel("Y-Coordinate")
 
-
+def get_clusters(data):
+	'''
+	Perform k-means clustering on data.
+	Returns array of clusters (coordinates).
+	'''
+	Kmean = KMeans(n_clusters=10)
+	Kmean.fit(data)
+	centroids = Kmean.cluster_centers_
+	return centroids
+    
 def plot_clusters(data):
     '''
     Perform k-means clustering on data and plots.
@@ -67,31 +79,19 @@ def plot_clusters(data):
         plt.scatter(centroids[i][0], centroids[i][1], s=10, c='r')
 
 
-def quick_bundles(data): #### need to modify for updated data ####
+def quick_bundles(data):
     qb = QuickBundles(threshold=10)
-    clusters = qb.cluster(data)
-    color = iter(cm.rainbow(np.linspace(0,1,len(clusters))))
-    plt.figure(1)
+    clusters=qb.cluster(data)
+    '''
+    color=iter(cm.rainbow(np.linspace(0,1,len(clusters))))
     for i in range(len(clusters)):
         c = next(color)
         if len(clusters[i].indices) < 4:
             continue
         for j in clusters[i].indices:
             plt.plot(data[j][:, 0], data[j][:, 1], c=c)
-
-
-    plt.figure(2)
-    color = iter(cm.rainbow(np.linspace(0,1,len(clusters))))
-    for i in clusters:
-        c = next(color)
-        lane_traces = data[i.indices[0]]
-        for j in i.indices[1:]:
-            lane_traces = np.concatenate((lane_traces, data[j]))
-
-        centroids = get_clusters(lane_traces)
-        plt.scatter(centroids[:, 0], centroids[:, 1], s=10, c=c)
-    
-    plt.show()
+    '''
+    return clusters
 
 
 def edge_heading(p1, p2):

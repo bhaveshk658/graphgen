@@ -9,6 +9,11 @@ import os
 from utils import distance
 from utils import dist
 from utils import dist_point_to_line
+from utils import quick_bundles
+from utils import get_clusters
+from utils import plot_clusters
+
+from dipy.segment.clustering import QuickBundles
 
 import networkx as nx
 
@@ -26,16 +31,18 @@ def get_training_data(n, location):
 		path = os.path.join("interaction-dataset-copy/recorded_trackfiles/"
 			+location, "vehicle_tracks_00"+str(i)+".csv")
 		data = pd.read_csv(path)
-		#box = [[960, 1010], [985, 1040]]
-		box = [[0, 10000], [0, 10000]]
+		box = [[960, 1015], [980, 1040]]
+		#box = [[0, 10000], [0, 10000]]
 		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 		frames.append(data)
 
-		for j in range(100):
+		'''
+		for j in range(1000):
 			temp = data.loc[(data['track_id'] == j)]
 			temp = temp.to_numpy()
 			temp = np.vstack((temp[:, 4], temp[:, 5], temp[:, 2], temp[:, 6], temp[:, 7])).T
 			traces.append(temp)
+
 
 		traces_copy = []
 		for trace in traces:
@@ -52,8 +59,13 @@ def get_training_data(n, location):
 				else:
 					heading = np.arccos(np.dot(velocity/length, [1, 0]))
 				traces_copy[j][k][3] = heading
-
-	return (pd.concat(frames), traces_copy)
+		'''
+		for j in range(len(data.index)):
+			temp = data.loc[(data['track_id'] == j)]
+			temp = temp.to_numpy()
+			temp = np.vstack((temp[:, 4], temp[:, 5])).T
+			traces.append(temp)
+	return (pd.concat(frames), traces)
 
 
 def get_clusters(data):
@@ -122,10 +134,11 @@ def to_merge(candidate, G):
 
 
 if __name__ == "__main__":
-	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
-	points = np.array([item for sublist in traces for item in sublist])
+	(data, traces) = get_training_data(4, "DR_USA_Roundabout_EP")
+	#points = np.array([item for sublist in traces for item in sublist])
+	#points = np.delete(points, [2, 4], axis=1)
 	G = nx.DiGraph()
-	
+	'''
 	#Preprocessing
 	trips = []
 	for c in traces:
@@ -156,13 +169,29 @@ if __name__ == "__main__":
 					G.add_edge(prevNode, n)
 				prevNode = n
 
-
 	pos = {}
 	for node in G:
 		pos[node] = [node.x, node.y]
 	
 	nx.draw(G, pos, node_size=10)
+	'''
+	temp = []
+	for i in traces:
+		if len(i) >= 50:
+			temp.append(i)
+	clusters = quick_bundles(temp)
+	paths = []
+	for i in range(len(clusters)):
+		if len(clusters[i].indices) < 6:
+			continue
+		path = []
+		for i in clusters[i].indices:
+			path.append(temp[i])
+		paths.append(path)
+	points = np.array([item for sublist in paths[0] for item in sublist])
+	plot_clusters(points)
 	plt.show()
+
 
 
 
