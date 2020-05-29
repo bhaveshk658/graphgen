@@ -184,3 +184,22 @@ for trip in trips:
     plt.plot(dist_23[:, 0], dist_23[:, 1], c='r')
 
     plt.show()
+
+
+
+    temp = []
+	for i in traces:
+		if len(i) >= 50:
+			temp.append(i)
+	clusters = quick_bundles(temp)
+	paths = []
+	for i in range(len(clusters)):
+		if len(clusters[i].indices) < 6:
+			continue
+		path = []
+		for i in clusters[i].indices:
+			path.append(temp[i])
+		paths.append(path)
+	for i in range(len(paths)):
+		points = np.array([item for sublist in paths[i] for item in sublist])
+		plot_clusters(points)

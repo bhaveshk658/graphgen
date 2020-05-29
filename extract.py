@@ -12,6 +12,7 @@ from utils import dist_point_to_line
 from utils import quick_bundles
 from utils import get_clusters
 from utils import plot_clusters
+from utils import plot_all_data
 
 from dipy.segment.clustering import QuickBundles
 
@@ -63,21 +64,26 @@ def get_training_data(n, location):
 		for j in range(len(data.index)):
 			temp = data.loc[(data['track_id'] == j)]
 			temp = temp.to_numpy()
-			temp = np.vstack((temp[:, 4], temp[:, 5])).T
-			traces.append(temp)
+			if len(temp != 0):
+				temp = np.vstack((temp[:, 4], temp[:, 5], temp[:, 6], temp[:, 7])).T
+				traces.append(temp)
+
+		for i in range(len(traces)):
+			for j in range(len(traces[i])):
+				velocity = traces[i][j][2:]
+				length = np.linalg.norm(velocity)
+				if (length == 0):
+					heading = 0
+				else:
+					heading = np.arccos(np.dot(velocity/length, [1, 0]))
+				traces[i][j][3] = heading
+		for i in range(len(traces)):
+			traces[i] = np.delete(traces[i], 2, axis=1)
+
+		
+		
+				
 	return (pd.concat(frames), traces)
-
-
-def get_clusters(data):
-	'''
-	Perform k-means clustering on data.
-	Returns array of clusters (coordinates).
-	'''
-	Kmean = KMeans(n_clusters=200)
-	Kmean.fit(data)
-	centroids = Kmean.cluster_centers_
-	return centroids
-
 
 class Node:
 
@@ -118,7 +124,6 @@ def to_merge(candidate, G):
 	d2 = distance(closest[1].x, closest[1].y, proj_point[0], proj_point[1])
 	angle = abs(candidate.heading - closest[0].heading)
 
-
 	if (h < 0.2) and (angle < 0.4): #decrease h?
 		if (d1 < d2):
 			return (True, closest, closest[0], d1)
@@ -134,11 +139,11 @@ def to_merge(candidate, G):
 
 
 if __name__ == "__main__":
-	(data, traces) = get_training_data(4, "DR_USA_Roundabout_EP")
+	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
 	#points = np.array([item for sublist in traces for item in sublist])
 	#points = np.delete(points, [2, 4], axis=1)
 	G = nx.DiGraph()
-	'''
+	
 	#Preprocessing
 	trips = []
 	for c in traces:
@@ -153,7 +158,8 @@ if __name__ == "__main__":
 			point = c[i]
 
 		trips.append(np.array(trip))
-
+	
+	
 	#Algorithm based on paper by Cao and Krumm, Microsoft
 	for t in trips:
 		prevNode = None
@@ -174,23 +180,9 @@ if __name__ == "__main__":
 		pos[node] = [node.x, node.y]
 	
 	nx.draw(G, pos, node_size=10)
-	'''
-	temp = []
-	for i in traces:
-		if len(i) >= 50:
-			temp.append(i)
-	clusters = quick_bundles(temp)
-	paths = []
-	for i in range(len(clusters)):
-		if len(clusters[i].indices) < 6:
-			continue
-		path = []
-		for i in clusters[i].indices:
-			path.append(temp[i])
-		paths.append(path)
-	points = np.array([item for sublist in paths[0] for item in sublist])
-	plot_clusters(points)
-	plt.show()
+	
+
+	#plt.show()
 
 
 
