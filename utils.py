@@ -18,6 +18,9 @@ from dipy.segment.clustering import QuickBundles
 import os
 import time
 
+#def direction(a, b, c):
+
+
 def distance(x1, y1, x2, y2):
 	return pow((pow(x1 - x2, 2) + pow(y1 - y2, 2)), 0.5)
 
@@ -95,7 +98,10 @@ def quick_bundles(data):
 
 
 def edge_heading(p1, p2):
-    vector = np.subtract(p2, p1)
+    '''
+    Direction of an edge from node p1 to node p2.
+    '''
+    vector = np.array([p2.x-p1.x, p2.y-p1.y])
     length = np.linalg.norm(vector)
     if (length == 0):
         return 0
@@ -104,6 +110,9 @@ def edge_heading(p1, p2):
 
 
 def edge_dist(p1, p2, p3):
+    '''
+    Distance from point p3 to line segment p1-p2.
+    '''
     p1 = np.array(p1)
     p2 = np.array(p2)
     p3 = np.array(p3)
@@ -113,15 +122,23 @@ def edge_dist(p1, p2, p3):
     return np.cross(p2 - p1, p3 - p1) / np.linalg.norm(p2 - p1)
 
 def node_dist(node1, node2):
-
+    '''
+    Distance between two nodes.
+    '''
     return distance(node1.x, node1.y, node2.x, node2.y)
 
 def dist(point1, point2):
-
+    '''
+    Distance between two points represented by arrays.
+    '''
     return distance(point1[0], point1[1], point2[0], point2[1])
 
 
 def dist_point_to_line(candidate, node1, node2):
+    '''
+    Distance from a candidate node to an edge.
+    '''
+
     area = abs(0.5*np.linalg.det(np.array([[candidate.x, candidate.y, 1],
                                        [node1.x, node1.y, 1],
                                        [node2.x, node2.y, 1]])))

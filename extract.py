@@ -9,14 +9,10 @@ import os
 from utils import distance
 from utils import dist
 from utils import dist_point_to_line
-from utils import quick_bundles
-from utils import get_clusters
-from utils import plot_clusters
-from utils import plot_all_data
-
-from dipy.segment.clustering import QuickBundles
 
 import networkx as nx
+
+from sklearn.neighbors import KDTree
 
 def get_training_data(n, location):
 	'''
@@ -37,30 +33,6 @@ def get_training_data(n, location):
 		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 		frames.append(data)
 
-		'''
-		for j in range(1000):
-			temp = data.loc[(data['track_id'] == j)]
-			temp = temp.to_numpy()
-			temp = np.vstack((temp[:, 4], temp[:, 5], temp[:, 2], temp[:, 6], temp[:, 7])).T
-			traces.append(temp)
-
-
-		traces_copy = []
-		for trace in traces:
-			if len(trace) != 0:
-				traces_copy.append(trace)
-
-		x_axis = [1, 0]
-		for j in range(len(traces_copy)):
-			for k in range(len(traces_copy[j])):
-				velocity = traces_copy[j][k][3:]
-				length = np.linalg.norm(velocity)
-				if (length == 0):
-					heading = 0
-				else:
-					heading = np.arccos(np.dot(velocity/length, [1, 0]))
-				traces_copy[j][k][3] = heading
-		'''
 		for j in range(len(data.index)):
 			temp = data.loc[(data['track_id'] == j)]
 			temp = temp.to_numpy()
@@ -80,9 +52,6 @@ def get_training_data(n, location):
 		for i in range(len(traces)):
 			traces[i] = np.delete(traces[i], 2, axis=1)
 
-		
-		
-				
 	return (pd.concat(frames), traces)
 
 class Node:
@@ -134,16 +103,41 @@ def to_merge(candidate, G):
 
 
 
-
-
-
-
 if __name__ == "__main__":
 	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
-	#points = np.array([item for sublist in traces for item in sublist])
-	#points = np.delete(points, [2, 4], axis=1)
+	points = np.array([item for sublist in traces for item in sublist])
+	points = points[:, :2]
+	original = points
+	tree = KDTree(points, leaf_size=2)
+
+	#resultants = [None]*len(points) modify this as you iterate through nodes
+	#while any element of resultants < some small constant
+	for i in range(1, len(points) - 1):
+		a = points[i]
+		orig = original[i]
+		'''
+		n = normal vector to vector between points[i-1] and points[i+1]
+		Find segments that are within a certain radius r and check to see if they intersect
+		the line through a in the direction of n.
+		If they intersect, d1 is edge_dist(points[i-1], points[i+1], a). Then calculate T1 force. (*cos)
+		d2 = distance between orig and a.
+		Resultant force = T1 force + T2 force.
+		Move a in direction of resultant force by a small step
+		parameters
+			sigma2 = 5
+			N = 20
+			sigma1 = 5
+			k = 0.005
+			M = 1
+		'''
+
+
+
+
+
+
 	G = nx.DiGraph()
-	
+	'''
 	#Preprocessing
 	trips = []
 	for c in traces:
@@ -180,10 +174,9 @@ if __name__ == "__main__":
 		pos[node] = [node.x, node.y]
 	
 	nx.draw(G, pos, node_size=10)
-	
+	'''
 
 	#plt.show()
-
 
 
 
