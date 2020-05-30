@@ -45,9 +45,6 @@ def arclength(f, a, b, tol=1e-6):
             length += hypot(xdel, fx1 - fx0)  # length of small line segment
     return length
 
-def compute_headings(data):
-    headings = []
-    velocities = data[:, 3:]
 
 def plot_all_data(data):
     '''

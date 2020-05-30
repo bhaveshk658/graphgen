@@ -110,8 +110,8 @@ if __name__ == "__main__":
 	original = points
 	tree = KDTree(points, leaf_size=2)
 
-	#resultants = [None]*len(points) modify this as you iterate through nodes
-	#while any element of resultants < some small constant
+	resultants = [5]*len(points)
+	#while not all(force < 5 for force in resultants):
 	for i in range(1, len(points) - 1):
 		a = points[i]
 		orig = original[i]
@@ -130,6 +130,35 @@ if __name__ == "__main__":
 			k = 0.005
 			M = 1
 		'''
+		prev_point = points[i - 1]
+		next_point = points[i + 1]
+		n1 = [-(next_point[1] - prev_point[1]), next_point[0] - prev_point[0]]
+		n2 = [next_point[1] - prev_point[1], -(next_point[0] - prev_point[0])]
+
+		ind = tree.query_radius([points[i]], r=0.5)
+		pairs = []
+		for j in range(len(ind[0])):
+			for k in range(j+1, len(ind[0])):
+				if ind[0][j]+1 == ind[0][k]:
+					pairs.append([ind[0][j], ind[0][k]])
+		if i == 4:
+			print(ind[0])
+			print(pairs)
+			plt.scatter(points[i][0], points[i][1], c='r')
+			index1 = pairs[0][0]
+			index2 = pairs[0][1]
+			print(points[index1])
+			print(points[index2])
+			plt.plot([points[index1][0], points[index2][0]],
+					  [points[index1][1], points[index2][1]], c='b')
+			'''
+			for j in ind[0]:
+				if j != i:
+					plt.scatter(points[j][0], points[j][1], c='b')
+			'''
+			plt.show()
+			break
+
 
 
 
