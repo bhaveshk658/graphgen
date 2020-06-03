@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans
 
 import os
 
+import utils
 from utils import distance
 from utils import dist
 from utils import dist_point_to_line
@@ -106,15 +107,15 @@ def to_merge(candidate, G):
 if __name__ == "__main__":
 	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
 	points = np.array([item for sublist in traces for item in sublist])
-	points = points[:, :2]
+	points = points[:, :3]
 	original = points
 	tree = KDTree(points, leaf_size=2)
 
 	resultants = [5]*len(points)
 	#while not all(force < 5 for force in resultants):
 	for i in range(1, len(points) - 1):
-		a = points[i]
-		orig = original[i]
+		a = points[i, :2]
+		orig = original[i, :2]
 		'''
 		n = normal vector to vector between points[i-1] and points[i+1]
 		Find segments that are within a certain radius r and check to see if they intersect
@@ -130,25 +131,42 @@ if __name__ == "__main__":
 			k = 0.005
 			M = 1
 		'''
-		prev_point = points[i - 1]
-		next_point = points[i + 1]
-		n1 = [-(next_point[1] - prev_point[1]), next_point[0] - prev_point[0]]
-		n2 = [next_point[1] - prev_point[1], -(next_point[0] - prev_point[0])]
+		prev_point = points[i - 1, :2]
+		next_point = points[i + 1, :2]
+		heading = next_point - prev_point
+		d = np.array([heading[1], -heading[0]])
+		#n1 = [-(next_point[1] - prev_point[1]), next_point[0] - prev_point[0]]
+		#n2 = [next_point[1] - prev_point[1], -(next_point[0] - prev_point[0])]
 
-		ind = tree.query_radius([points[i]], r=0.5)
+		ind = tree.query_radius([points[i]], r=5)
 		pairs = []
 		for j in range(len(ind[0])):
 			for k in range(j+1, len(ind[0])):
 				if ind[0][j]+1 == ind[0][k]:
 					pairs.append([ind[0][j], ind[0][k]])
+
+		#t = 0
+		#f = 0
+		for pair in pairs:
+			p1 = points[pair[0], :2]
+			p2 = points[pair[1], :2]
+			if utils.line_line_segment_intersect(a, d, p1, p2):
+				#t += 1
+				'''
+				calculate t1 force using distance from point to edge and formula
+				calculate t2 force using a position and orig
+				calculate resultant force
+				shift a in direction of resultant force by some constant proportional to force
+				'''
+			else:
+				#f += 1
+		#print('True: ' +str(t))
+		#print('False: ' +str(f))
+		
 		if i == 4:
-			print(ind[0])
-			print(pairs)
 			plt.scatter(points[i][0], points[i][1], c='r')
 			index1 = pairs[0][0]
 			index2 = pairs[0][1]
-			print(points[index1])
-			print(points[index2])
 			plt.plot([points[index1][0], points[index2][0]],
 					  [points[index1][1], points[index2][1]], c='b')
 			'''

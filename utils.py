@@ -143,4 +143,25 @@ def dist_point_to_line(candidate, node1, node2):
 
     return 2*area/distance
 
+def line_line_segment_intersect(p, d, p1, p2):
+    '''
+    p: point on the line.
+    d: direction vector of line of interest.
+    p1: first endpoint of line segment.
+    p2: second endpoint of line segment.
+    '''
+    p = np.array(p)
+    p1 = np.array(p1)
+    p2 = np.array(p2)
+    d = np.array(d)
+
+    v1 = np.dot(d, p1-p)
+    v2 = np.dot(d, p2-p)
+    print(v1, v2)
+
+    if (v1 >= 0 and v2 >= 0) or (v1 < 0 and v2 < 0):
+        return True
+    else:
+        return False
+
 
