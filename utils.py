@@ -157,7 +157,6 @@ def line_line_segment_intersect(p, d, p1, p2):
 
     v1 = np.dot(d, p1-p)
     v2 = np.dot(d, p2-p)
-    print(v1, v2)
 
     if (v1 >= 0 and v2 >= 0) or (v1 < 0 and v2 < 0):
         return True

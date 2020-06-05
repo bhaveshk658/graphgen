@@ -1,13 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import math
 from sklearn.cluster import KMeans
 
 import os
 
 import utils
-from utils import distance
 from utils import dist
 from utils import dist_point_to_line
 
@@ -102,7 +101,10 @@ def to_merge(candidate, G):
 
 	return (False, closest, closest[0], d1)
 
-
+def type_1_force(t):
+	return (-1/(5*math.sqrt(2*math.pi)))*math.exp(-pow(t, 2)/50)
+def type_2_force(t, orig):
+	return 0.005*utils.distance(t[0], t[1], orig[0], orig[1])
 
 if __name__ == "__main__":
 	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
@@ -138,45 +140,55 @@ if __name__ == "__main__":
 		#n1 = [-(next_point[1] - prev_point[1]), next_point[0] - prev_point[0]]
 		#n2 = [next_point[1] - prev_point[1], -(next_point[0] - prev_point[0])]
 
-		ind = tree.query_radius([points[i]], r=5)
+		ind = tree.query_radius([points[i]], r=1)
 		pairs = []
 		for j in range(len(ind[0])):
 			for k in range(j+1, len(ind[0])):
 				if ind[0][j]+1 == ind[0][k]:
 					pairs.append([ind[0][j], ind[0][k]])
 
-		#t = 0
-		#f = 0
+		t = 0
+		f = 0
 		for pair in pairs:
 			p1 = points[pair[0], :2]
 			p2 = points[pair[1], :2]
 			if utils.line_line_segment_intersect(a, d, p1, p2):
-				#t += 1
+				t += 1
 				'''
 				calculate t1 force using distance from point to edge and formula
 				calculate t2 force using a position and orig
 				calculate resultant force
 				shift a in direction of resultant force by some constant proportional to force
 				'''
+				distance = utils.edge_dist(a, p1, p2)
+				t1 = type_1_force(distance)
+				t2 = type_2_force(a, orig)
+				resultant = t1 + t2
+				'''
+				have magnitude of the vectors, get heading then make vector
+				resultant is sum of two vectors
+				add resultant vector times constant to position of a
+				'''
+
+				
 			else:
-				#f += 1
-		#print('True: ' +str(t))
-		#print('False: ' +str(f))
-		
+				f += 1
+		print('True: ' +str(t))
+		print('False: ' +str(f))
+		'''
 		if i == 4:
 			plt.scatter(points[i][0], points[i][1], c='r')
 			index1 = pairs[0][0]
 			index2 = pairs[0][1]
 			plt.plot([points[index1][0], points[index2][0]],
 					  [points[index1][1], points[index2][1]], c='b')
-			'''
+			
 			for j in ind[0]:
 				if j != i:
 					plt.scatter(points[j][0], points[j][1], c='b')
-			'''
 			plt.show()
 			break
-
+		'''
 
 
 
