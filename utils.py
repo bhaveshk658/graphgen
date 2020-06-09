@@ -52,12 +52,9 @@ def plot_all_data(data):
     Allows us to get visualization of what the map can look like.
     Isolates x and y coordinates from dataframe and plots.
     '''
-    temp = data.to_numpy()
-    temp = np.vstack((temp[:, 4], temp[:, 5])).T
-    plt.scatter(temp[:, 0], temp[:, 1], s=1)
-    plt.title("All Data Points")
-    plt.xlabel("X-Coordinate")
-    plt.ylabel("Y-Coordinate")
+    for trace in data:
+        plt.scatter(trace[:, 0], trace[:, 1], c='r')
+    
 
 def get_clusters(data):
 	'''
