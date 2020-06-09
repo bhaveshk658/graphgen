@@ -125,6 +125,37 @@ if __name__ == "__main__":
 
 	lengths = [len(trip) for trip in trips]
 	points = np.array([item for sublist in trips for item in sublist])
+	points = points[:, :2]
+	original = points
+
+	tree = KDTree(points, leaf_size=2)
+
+	for i in range(1, len(points) - 1):
+		a = points[i]
+		orig = original[i]
+		prev_point = points[i - 1]
+		next_point = points[i + 1]
+		heading = next_point - prev_point
+		d = np.array((heading[1], -heading[0]))
+
+		ind = tree.query_radius(np.array([a]), r=5)
+
+		pairs = []
+		for j in range(len(ind[0])):
+			for k in range(j + 1, len(ind[0])):
+				if ind[0][j]+1 == ind[0][k]:
+					pairs.append([ind[0][j], ind[0][k]])
+
+		if i == 16:
+			plt.scatter(a[0], a[1], c='b')
+			plt.scatter(a[0] + d[0], a[1] + d[1], c='b')
+			plt.scatter(prev_point[0], prev_point[1], c='r')
+			plt.scatter(next_point[0], next_point[1], c='r')
+			for pair in pairs:
+				if utils.line_line_segment_intersect(a, d, points[pair[0]], points[pair[1]]):
+					plt.plot([points[pair[0]][0], points[pair[1]][0]], [points[pair[0]][1], points[pair[1]][1]])
+			plt.show()
+			break
 
 	'''
 	G = nx.DiGraph()
