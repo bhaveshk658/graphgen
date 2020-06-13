@@ -11,6 +11,7 @@ import collections
 from sklearn.cluster import KMeans
 
 from math import hypot
+from math import sqrt
 
 from dipy.segment.clustering import QuickBundles
 
@@ -23,6 +24,11 @@ import time
 
 def distance(x1, y1, x2, y2):
 	return pow((pow(x1 - x2, 2) + pow(y1 - y2, 2)), 0.5)
+
+def direction(p1, p2):
+    p1 = np.array(p1)
+    p2 = np.array(p2)
+    return (p2-p1)/distance(p1[0], p1[1], p2[0], p2[1])
 
 
 def arclength(f, a, b, tol=1e-6):
@@ -127,18 +133,67 @@ def dist(point1, point2):
     '''
     return distance(point1[0], point1[1], point2[0], point2[1])
 
+def dist_point_to_line(A, B, E): # x3,y3 is the point
+    A = [A.x, A.y]
+    B = [B.x, B.y]
+    E = [E.x, E.y]
+    # vector AB  
+    AB = [None, None];  
+    AB[0] = B[0] - A[0];  
+    AB[1] = B[1] - A[1];  
+  
+    # vector BP  
+    BE = [None, None]; 
+    BE[0] = E[0] - B[0];  
+    BE[1] = E[1] - B[1];  
+  
+    # vector AP  
+    AE = [None, None]; 
+    AE[0] = E[0] - A[0]; 
+    AE[1] = E[1] - A[1];  
+  
+    # Variables to store dot product  
+  
+    # Calculating the dot product  
+    AB_BE = AB[0] * BE[0] + AB[1] * BE[1];  
+    AB_AE = AB[0] * AE[0] + AB[1] * AE[1];  
+  
+    # Minimum distance from  
+    # point E to the line segment  
+    reqAns = 0;  
+  
+    # Case 1  
+    if (AB_BE > 0) : 
+  
+        # Finding the magnitude  
+        y = E[1] - B[1];  
+        x = E[0] - B[0];  
+        reqAns = sqrt(x * x + y * y);  
+  
+    # Case 2  
+    elif (AB_AE < 0) : 
+        y = E[1] - A[1];  
+        x = E[0] - A[0];  
+        reqAns = sqrt(x * x + y * y);  
+  
+    # Case 3  
+    else: 
+  
+        # Finding the perpendicular distance  
+        x1 = AB[0];  
+        y1 = AB[1];  
+        x2 = AE[0];  
+        y2 = AE[1];  
+        mod = sqrt(x1 * x1 + y1 * y1);  
+        reqAns = abs(x1 * y2 - y1 * x2) / mod;  
+      
+    return reqAns;
 
-def dist_point_to_line(candidate, node1, node2):
-    '''
-    Distance from a candidate node to an edge.
-    '''
+def ccw(A, B, C):
+    return (C[1] - A[1])*(B[0]-A[0]) > (B[1]-A[1])*(C[0]-A[0])
 
-    area = abs(0.5*np.linalg.det(np.array([[candidate.x, candidate.y, 1],
-                                       [node1.x, node1.y, 1],
-                                       [node2.x, node2.y, 1]])))
-    distance = ((node2.y - node1.y)**2 + (node2.x - node1.x)**2)**0.5
-
-    return 2*area/distance
+def is_intersect(A, B, C, D):
+    return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
 
 def line_line_segment_intersect(p, d, p1, p2):
     '''
@@ -152,12 +207,78 @@ def line_line_segment_intersect(p, d, p1, p2):
     p2 = np.array(p2)
     d = np.array(d)
 
-    v1 = np.dot(d, p1-p)
-    v2 = np.dot(d, p2-p)
+    extend1 = p + 500*d
+    extend2 = p - 500*d
 
-    if (v1 >= 0 and v2 >= 0) or (v1 < 0 and v2 < 0):
-        return True
-    else:
-        return False
+    return is_intersect(p, extend1, p1, p2) or is_intersect(p, extend2, p1, p2)
+
+
+def minDistance(A, B, E) :  
+
+    A = np.array(A)
+    B = np.array(B)
+    E = np.array(E)
+  
+    # vector AB  
+    AB = [None, None]   
+    AB[0] = B[0] - A[0]   
+    AB[1] = B[1] - A[1]   
+  
+    # vector BP  
+    BE = [None, None]  
+    BE[0] = E[0] - B[0]   
+    BE[1] = E[1] - B[1]   
+  
+    # vector AP  
+    AE = [None, None]  
+    AE[0] = E[0] - A[0]  
+    AE[1] = E[1] - A[1]   
+  
+    # Variables to store dot product  
+  
+    # Calculating the dot product  
+    AB_BE = AB[0] * BE[0] + AB[1] * BE[1]   
+    AB_AE = AB[0] * AE[0] + AB[1] * AE[1]   
+  
+    # Minimum distance from  
+    # point E to the line segment  
+    reqAns = 0   
+  
+    # Case 1  
+    if (AB_BE > 0) : 
+  
+        # Finding the magnitude  
+        y = E[1] - B[1]   
+        x = E[0] - B[0]   
+        reqAns = sqrt(x * x + y * y)   
+  
+    # Case 2  
+    elif (AB_AE < 0) : 
+        y = E[1] - A[1]   
+        x = E[0] - A[0]   
+        reqAns = sqrt(x * x + y * y)   
+  
+    # Case 3  
+    else: 
+  
+        # Finding the perpendicular distance  
+        x1 = AB[0]   
+        y1 = AB[1]   
+        x2 = AE[0]   
+        y2 = AE[1]   
+        mod = sqrt(x1 * x1 + y1 * y1)   
+        reqAns = abs(x1 * y2 - y1 * x2) / mod   
+      
+    return reqAns
+
+def is_left(A, B, C):
+    A = np.array(A)
+    B = np.array(B)
+    C = np.array(C)
+
+    return np.cross(B[0]-A[0], C[1]-A[1]) - np.cross(B[1]-A[1], C[0]-A[0]) > 0
+
+
+
 
 

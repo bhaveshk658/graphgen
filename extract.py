@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import math
+from math import *
 from sklearn.cluster import KMeans
 
 import os
@@ -47,7 +47,8 @@ def get_training_data(n, location):
 				if (length == 0):
 					heading = 0
 				else:
-					heading = np.arccos(np.dot(velocity/length, [1, 0]))
+					x = velocity/length
+					heading = np.arccos(np.dot(x, [1, 0]))
 				traces[i][j][3] = heading
 		for i in range(len(traces)):
 			traces[i] = np.delete(traces[i], 2, axis=1)
@@ -76,35 +77,54 @@ def to_merge(candidate, G):
 	if len(G.edges) == 0:
 		return (False, 0, 0, 0)
 	edges = [e for e in G.edges]
-	closest = edges[0]
-	closest_dist = dist_point_to_line(candidate, closest[0], closest[1])
-	for edge in edges[1:]:
-		temp_dist = dist_point_to_line(candidate, edge[0], edge[1])
-		if temp_dist < closest_dist:
-			closest = edge
+	#closest = edges[0]
+	#closest_dist = dist_point_to_line(candidate, closest[0], closest[1])
+
+	for edge in edges:
+		temp_dist = dist_point_to_line(edge[0], edge[1], candidate)
+		temp_heading = abs(candidate.heading - edge[0].heading)
+		if temp_dist < 3 and temp_heading < 0.4:
+			d1 = utils.distance(edge[0].x, edge[0].y, candidate.x, candidate.y)
+			d2 = utils.distance(edge[1].x, edge[1].y, candidate.x, candidate.y)
+			if (d1 < d2):
+				return (True, edge, edge[0], d1)
+			else:
+				return (True, edge, edge[1], d2)
+
+	return (False, edge, edge[0], 0)
+			#closest = edge
+	'''
 	edge_vector = np.array([closest[1].x - closest[0].x, closest[1].y - closest[0].y])
 	candidate_vector = np.array([candidate.x - closest[0].x, candidate.y - closest[0].y])
 
-	proj = np.multiply((np.dot(candidate_vector, edge_vector)/np.dot(edge_vector, edge_vector)), edge_vector)
-	proj_point = np.add(proj, np.array([closest[0].x, closest[0].y]))
+	#proj = np.multiply((np.dot(candidate_vector, edge_vector)/np.dot(edge_vector, edge_vector)), edge_vector)
+	#proj_point = np.add(proj, np.array([closest[0].x, closest[0].y]))
 
 	h = dist_point_to_line(candidate, closest[0], closest[1])
-	d1 = utils.distance(closest[0].x, closest[0].y, proj_point[0], proj_point[1])
-	d2 = utils.distance(closest[1].x, closest[1].y, proj_point[0], proj_point[1])
+	d1 = utils.distance(closest[0].x, closest[0].y, candidate.x, candidate.y)
+	d2 = utils.distance(closest[1].x, closest[1].y, candidate.x, candidate.y)
 	angle = abs(candidate.heading - closest[0].heading)
 
-	if (h < 0.2) and (angle < 0.4): #decrease h?
+	if (h < 1) and (angle < 0.6):
 		if (d1 < d2):
 			return (True, closest, closest[0], d1)
 		else:
-			return (True, closest, closest[0], d2)
+			return (True, closest, closest[1], d2)
 
 	return (False, closest, closest[0], d1)
+	'''
 
 def type_1_force(t):
-	return (-1/(5*math.sqrt(2*math.pi)))*math.exp(-pow(t, 2)/50)
+	M = 10
+	N = 20
+	s1 = 5
+	s2 = 5
+	sig_square = s1**2 + s2**2
+
+	return ((M*N)/(sqrt(2*pi*sig_square))) * ((2*t*exp((-t**2)/(2*sig_square)))/(2*sig_square))
+
 def type_2_force(t, orig):
-	return 0.005*utils.distance(t[0], t[1], orig[0], orig[1])
+	return 0.5*utils.distance(t[0], t[1], orig[0], orig[1])
 
 if __name__ == "__main__":
 	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
@@ -122,67 +142,133 @@ if __name__ == "__main__":
 			point = c[i]
 		trips.append(np.array(trip))
 	trips = np.array(trips)
-
+	
 	lengths = [len(trip) for trip in trips]
 	points = np.array([item for sublist in trips for item in sublist])
+	headings = points[:, 2]
 	points = points[:, :2]
-	original = points
+	plt.figure(1)
+	for point in points:
+		plt.scatter(point[0], point[1])
+	
 
 	tree = KDTree(points, leaf_size=2)
+	original = np.copy(points)
 
-	for i in range(1, len(points) - 1):
-		a = points[i]
-		orig = original[i]
-		prev_point = points[i - 1]
-		next_point = points[i + 1]
-		heading = next_point - prev_point
-		d = np.array((heading[1], -heading[0]))
+	count = 50
+	while count > 0:
+		for i in range(1, len(points) - 1):
+			a = points[i]
+			orig = original[i]
+			prev_point = points[i - 1]
+			next_point = points[i + 1]
+			heading = next_point - prev_point
+			d = np.array((heading[1], -heading[0]))
 
-		ind = tree.query_radius(np.array([a]), r=5)
+			ind = tree.query_radius(np.array([a]), r=3)
 
-		pairs = []
-		for j in range(len(ind[0])):
-			for k in range(j + 1, len(ind[0])):
-				if ind[0][j]+1 == ind[0][k]:
-					pairs.append([ind[0][j], ind[0][k]])
-
-		if i == 16:
-			plt.scatter(a[0], a[1], c='b')
-			plt.scatter(a[0] + d[0], a[1] + d[1], c='b')
-			plt.scatter(prev_point[0], prev_point[1], c='r')
-			plt.scatter(next_point[0], next_point[1], c='r')
+			pairs = []
+			for j in range(len(ind[0])):
+				for k in range(j + 1, len(ind[0])):
+					if ind[0][j]+1 == ind[0][k]:
+						pairs.append([ind[0][j], ind[0][k]])
+			
 			for pair in pairs:
-				if utils.line_line_segment_intersect(a, d, points[pair[0]], points[pair[1]]):
-					plt.plot([points[pair[0]][0], points[pair[1]][0]], [points[pair[0]][1], points[pair[1]][1]])
-			plt.show()
-			break
+				b = points[pair[0]]
+				c = points[pair[1]]
+				seg_heading = c - b
+				midpoint = (c-b)/2
 
-	'''
-	G = nx.DiGraph()
+				if utils.line_line_segment_intersect(a, d, b, c):
+					t1_distance = utils.minDistance(b, c, a)
+					t1_direction = (midpoint-a)/(utils.distance(midpoint[0], midpoint[1], a[0], a[1]))
+					t1 = np.array(type_1_force(t1_distance) * t1_direction)
+
+					if all(a == orig):
+						t2 = 0
+					else:
+						t2_direction = utils.direction(a, orig)
+						t2 = type_2_force(a, orig) * t2_direction
+
+					resultant = t1 + t2
+					
+					angle = np.dot(seg_heading, heading)/(np.linalg.norm(seg_heading)*np.linalg.norm(heading))
+					if cos(angle) < 0 and not utils.is_left(b, c, a):
+						resultant = 0
+					else:
+						resultant = resultant*cos(angle)
+
+					a += (5*resultant)
+				
+			points[i] = a
+
+		count -= 1
+
+	trips = []
+	for l in lengths:
+		trip = []
+		temp = points[:l]
+		temp_headings = headings[:l]
+		for i in range(len(temp)):
+			trip.append(Node(temp[i][0], temp[i][1], temp_headings[i]))
+		trips.append(np.array(trip))
+		points = points[l:]
+		headings = headings[l:]
+	
+	count = 0
+	G = nx.MultiDiGraph()
+	prevNode = None
+	for n in trips[0]:
+		tm = to_merge(n, G)
+		print(tm[0])
+		G.add_node(n)
+		if prevNode is not None:
+			G.add_edge(prevNode, n, weight=1)
+		prevNode = n
 	#Algorithm based on paper by Cao and Krumm, Microsoft
-	for t in trips:
+	for i in range(1, len(trips)):
+		t = trips[i]
 		prevNode = None
 		for n in t:
+			if i == 12:
+				print(prevNode)
 			(merge, closest_edge, closest_node, short_projection_distance) = to_merge(n, G)
 			if merge:
-				if prevNode is not None and nx.has_path(G, prevNode, closest_node) and len(nx.shortest_path(G, prevNode, closest_node)) > 5:
-					G.add_edge(prevNode, closest_node)
+				count += 1
+				if prevNode is not None and ((not nx.has_path(G, prevNode, closest_node)) or len(nx.shortest_path(G, prevNode, closest_node))) > 5:
+					G.add_edge(prevNode, closest_node, weight=1)
 					prevNode = closest_node
 			else:
 				G.add_node(n)
 				if prevNode is not None:
-					G.add_edge(prevNode, n)
+					G.add_edge(prevNode, n, weight=1)
 				prevNode = n
 
 	pos = {}
 	for node in G:
 		pos[node] = [node.x, node.y]
-	plt.figure(3)
+	plt.figure(2)
 	nx.draw(G, pos, node_size=10)
 		
+	print(count)
 	
 	'''
-	#plt.show()
+	prevNode = None
+	for n in trips[0]:
+		tm = to_merge(n, G)
+		print(tm[0])
+		G.add_node(n)
+		if prevNode is not None:
+			G.add_edge(prevNode, n)
+		prevNode = n
+	
+	pos = {}
+	for node in G:
+		pos[node] = [node.x, node.y]
+	plt.figure(2)
+	nx.draw(G, pos, node_size=10)
+	'''
+	plt.show()
 
 
 
