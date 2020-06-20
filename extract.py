@@ -2,13 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from math import *
-from sklearn.cluster import KMeans
 
 import os
 
 import utils
 from utils import dist
 from utils import dist_point_to_line
+
+from node import Node
 
 import networkx as nx
 
@@ -28,11 +29,14 @@ def get_training_data(n, location):
 		path = os.path.join("interaction-dataset-copy/recorded_trackfiles/"
 			+location, "vehicle_tracks_00"+str(i)+".csv")
 		data = pd.read_csv(path)
+
+		# Define rectangle of area to take points from.
 		box = [[960, 1015], [980, 1040]]
-		#box = [[0, 10000], [0, 10000]]
 		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 		frames.append(data)
 
+		# Add the trace for each car j to the list of traces.
+		# Contains x, y, x-velocity, y-velocity.
 		for j in range(len(data.index)):
 			temp = data.loc[(data['track_id'] == j)]
 			temp = temp.to_numpy()
@@ -40,6 +44,7 @@ def get_training_data(n, location):
 				temp = np.vstack((temp[:, 4], temp[:, 5], temp[:, 6], temp[:, 7])).T
 				traces.append(temp)
 
+		# Get headings using velocity vector at each point.
 		for i in range(len(traces)):
 			for j in range(len(traces[i])):
 				velocity = traces[i][j][2:]
@@ -50,39 +55,29 @@ def get_training_data(n, location):
 					x = velocity/length
 					heading = np.arccos(np.dot(x, [1, 0]))
 				traces[i][j][3] = heading
+		
+		# Keep traces as x, y, heading.
 		for i in range(len(traces)):
 			traces[i] = np.delete(traces[i], 2, axis=1)
 
 	return (pd.concat(frames), traces)
 
-class Node:
-
-	def __init__(self, x, y, heading):
-		self.x = x
-		self.y = y
-		self.heading = heading
-		self.merged = [self]
-
-	def merge(self, node):
-		self.merged.append(node)
-		prev_x = [i.x for i in self.merged]
-		prev_y = [i.y for i in self.merged]
-		prev_heading = [i.heading for i in self.merged]
-		self.x = sum(prev_x)/len(prev_x)
-		self.y = sum(prev_y)/len(prev_y)
-		self.heading = sum(prev_heading)/len(prev_heading)
-
-
 def to_merge(candidate, G):
+	'''
+	Determines if a candidate node should be merged into the graph.
+	Returns whether or not to merge, the target edge,
+	the closest node, and the distance.
+	'''
 	if len(G.edges) == 0:
 		return (False, 0, 0, 0)
 	edges = [e for e in G.edges]
-	#closest = edges[0]
-	#closest_dist = dist_point_to_line(candidate, closest[0], closest[1])
 
+	# Find edges that satisfy merge conditions.
 	for edge in edges:
 		temp_dist = dist_point_to_line(edge[0], edge[1], candidate)
 		temp_heading = abs(candidate.heading - edge[0].heading)
+		
+		# Check merge parameters.
 		if temp_dist < 3 and temp_heading < 0.4:
 			d1 = utils.distance(edge[0].x, edge[0].y, candidate.x, candidate.y)
 			d2 = utils.distance(edge[1].x, edge[1].y, candidate.x, candidate.y)
@@ -92,29 +87,12 @@ def to_merge(candidate, G):
 				return (True, edge, edge[1], d2)
 
 	return (False, edge, edge[0], 0)
-			#closest = edge
-	'''
-	edge_vector = np.array([closest[1].x - closest[0].x, closest[1].y - closest[0].y])
-	candidate_vector = np.array([candidate.x - closest[0].x, candidate.y - closest[0].y])
-
-	#proj = np.multiply((np.dot(candidate_vector, edge_vector)/np.dot(edge_vector, edge_vector)), edge_vector)
-	#proj_point = np.add(proj, np.array([closest[0].x, closest[0].y]))
-
-	h = dist_point_to_line(candidate, closest[0], closest[1])
-	d1 = utils.distance(closest[0].x, closest[0].y, candidate.x, candidate.y)
-	d2 = utils.distance(closest[1].x, closest[1].y, candidate.x, candidate.y)
-	angle = abs(candidate.heading - closest[0].heading)
-
-	if (h < 1) and (angle < 0.6):
-		if (d1 < d2):
-			return (True, closest, closest[0], d1)
-		else:
-			return (True, closest, closest[1], d2)
-
-	return (False, closest, closest[0], d1)
-	'''
 
 def type_1_force(t):
+	'''
+	Calculates the type 1 force as described by Cao and Krumm
+	for a distance t.
+	'''
 	M = 10
 	N = 20
 	s1 = 5
@@ -124,11 +102,16 @@ def type_1_force(t):
 	return ((M*N)/(sqrt(2*pi*sig_square))) * ((2*t*exp((-t**2)/(2*sig_square)))/(2*sig_square))
 
 def type_2_force(t, orig):
+	'''
+	Calculates the type 2 force as described by Cao and Krumm.
+	'''
 	return 0.5*utils.distance(t[0], t[1], orig[0], orig[1])
 
 if __name__ == "__main__":
 	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
 	
+	# Preprocessing: eliminate traces with less than 50 points
+	# and thin out traces.
 	trips = []
 	for c in traces:
 		if (len(c) < 50):
@@ -143,6 +126,7 @@ if __name__ == "__main__":
 		trips.append(np.array(trip))
 	trips = np.array(trips)
 	
+	# k-d tree requires flattened array.
 	lengths = [len(trip) for trip in trips]
 	points = np.array([item for sublist in trips for item in sublist])
 	headings = points[:, 2]
@@ -155,6 +139,7 @@ if __name__ == "__main__":
 	tree = KDTree(points, leaf_size=2)
 	original = np.copy(points)
 
+	# Cao and Krumm's preprocessing based on gravitational attraction.
 	count = 50
 	while count > 0:
 		for i in range(1, len(points) - 1):
@@ -167,12 +152,14 @@ if __name__ == "__main__":
 
 			ind = tree.query_radius(np.array([a]), r=3)
 
+			# Find consecutive points in the list of indices within radius of a.
 			pairs = []
 			for j in range(len(ind[0])):
 				for k in range(j + 1, len(ind[0])):
 					if ind[0][j]+1 == ind[0][k]:
 						pairs.append([ind[0][j], ind[0][k]])
 			
+			# Calculate t1 and t2 forces for each pair.
 			for pair in pairs:
 				b = points[pair[0]]
 				c = points[pair[1]]
@@ -192,6 +179,7 @@ if __name__ == "__main__":
 
 					resultant = t1 + t2
 					
+					# Limit repelling force to only affect left side of trace.
 					angle = np.dot(seg_heading, heading)/(np.linalg.norm(seg_heading)*np.linalg.norm(heading))
 					if cos(angle) < 0 and not utils.is_left(b, c, a):
 						resultant = 0
@@ -204,6 +192,7 @@ if __name__ == "__main__":
 
 		count -= 1
 
+	# Convert flattened modified points to traces of Nodes.
 	trips = []
 	for l in lengths:
 		trip = []
@@ -215,23 +204,13 @@ if __name__ == "__main__":
 		points = points[l:]
 		headings = headings[l:]
 	
+	# Cao and Krumm graph generation algorithm.
 	count = 0
 	G = nx.MultiDiGraph()
-	prevNode = None
-	for n in trips[0]:
-		tm = to_merge(n, G)
-		print(tm[0])
-		G.add_node(n)
-		if prevNode is not None:
-			G.add_edge(prevNode, n, weight=1)
-		prevNode = n
-	#Algorithm based on paper by Cao and Krumm, Microsoft
-	for i in range(1, len(trips)):
+	for i in range(0, len(trips)):
 		t = trips[i]
 		prevNode = None
 		for n in t:
-			if i == 12:
-				print(prevNode)
 			(merge, closest_edge, closest_node, short_projection_distance) = to_merge(n, G)
 			if merge:
 				count += 1
@@ -244,30 +223,13 @@ if __name__ == "__main__":
 					G.add_edge(prevNode, n, weight=1)
 				prevNode = n
 
+	# Visualize graph.
 	pos = {}
 	for node in G:
 		pos[node] = [node.x, node.y]
 	plt.figure(2)
 	nx.draw(G, pos, node_size=10)
 		
-	print(count)
-	
-	'''
-	prevNode = None
-	for n in trips[0]:
-		tm = to_merge(n, G)
-		print(tm[0])
-		G.add_node(n)
-		if prevNode is not None:
-			G.add_edge(prevNode, n)
-		prevNode = n
-	
-	pos = {}
-	for node in G:
-		pos[node] = [node.x, node.y]
-	plt.figure(2)
-	nx.draw(G, pos, node_size=10)
-	'''
 	plt.show()
 
 

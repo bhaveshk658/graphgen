@@ -19,83 +19,25 @@ from dipy.segment.clustering import QuickBundles
 import os
 import time
 
-#def direction(a, b, c):
-
-
 def distance(x1, y1, x2, y2):
-	return pow((pow(x1 - x2, 2) + pow(y1 - y2, 2)), 0.5)
+    '''
+    Distance between two points (x1, y1), (x2, y2).
+    '''
+    return pow((pow(x1 - x2, 2) + pow(y1 - y2, 2)), 0.5)
+
+def dist(p1, p2):
+    '''
+    Distance between two points represented by arrays.
+    '''
+    return distance(p1[0], p1[1], p2[0], p2[1])
 
 def direction(p1, p2):
+    '''
+    Direction between two points p1 and p2.
+    '''
     p1 = np.array(p1)
     p2 = np.array(p2)
     return (p2-p1)/distance(p1[0], p1[1], p2[0], p2[1])
-
-
-def arclength(f, a, b, tol=1e-6):
-    """Compute the arc length of function f(x) for a <= x <= b. Stop
-    when two consecutive approximations are closer than the value of
-    tol.
-    """
-    nsteps = 1  # number of steps to compute
-    oldlength = 1.0e20
-    length = 1.0e10
-    while abs(oldlength - length) >= tol:
-        nsteps *= 2
-        fx1 = f(a)
-        xdel = (b - a) / nsteps  # space between x-values
-        oldlength = length
-        length = 0
-        for i in range(1, nsteps + 1):
-            fx0 = fx1  # previous function value
-            fx1 = f(a + i * (b - a) / nsteps)  # new function value
-            length += hypot(xdel, fx1 - fx0)  # length of small line segment
-    return length
-
-
-def plot_all_data(data):
-    '''
-    Plots data returned by get_training_data.
-    Allows us to get visualization of what the map can look like.
-    Isolates x and y coordinates from dataframe and plots.
-    '''
-    for trace in data:
-        plt.scatter(trace[:, 0], trace[:, 1], c='r')
-    
-
-def get_clusters(data):
-	'''
-	Perform k-means clustering on data.
-	Returns array of clusters (coordinates).
-	'''
-	Kmean = KMeans(n_clusters=10)
-	Kmean.fit(data)
-	centroids = Kmean.cluster_centers_
-	return centroids
-    
-def plot_clusters(data):
-    '''
-    Perform k-means clustering on data and plots.
-    No return.
-    '''
-    centroids = get_clusters(data)
-    for i in range(len(centroids)):
-        plt.scatter(centroids[i][0], centroids[i][1], s=10, c='r')
-
-
-def quick_bundles(data):
-    qb = QuickBundles(threshold=10)
-    clusters=qb.cluster(data)
-    '''
-    color=iter(cm.rainbow(np.linspace(0,1,len(clusters))))
-    for i in range(len(clusters)):
-        c = next(color)
-        if len(clusters[i].indices) < 4:
-            continue
-        for j in clusters[i].indices:
-            plt.plot(data[j][:, 0], data[j][:, 1], c=c)
-    '''
-    return clusters
-
 
 def edge_heading(p1, p2):
     '''
@@ -107,7 +49,6 @@ def edge_heading(p1, p2):
         return 0
     else:
         return np.arccos(np.dot(vector/length, [1, 0]))
-
 
 def edge_dist(p1, p2, p3):
     '''
@@ -127,13 +68,10 @@ def node_dist(node1, node2):
     '''
     return distance(node1.x, node1.y, node2.x, node2.y)
 
-def dist(point1, point2):
+def dist_point_to_line(A, B, E):
     '''
-    Distance between two points represented by arrays.
+    Distance from Node E to edge A->B. Adapted from GeeksforGeeks.
     '''
-    return distance(point1[0], point1[1], point2[0], point2[1])
-
-def dist_point_to_line(A, B, E): # x3,y3 is the point
     A = [A.x, A.y]
     B = [B.x, B.y]
     E = [E.x, E.y]
@@ -187,20 +125,24 @@ def dist_point_to_line(A, B, E): # x3,y3 is the point
         mod = sqrt(x1 * x1 + y1 * y1);  
         reqAns = abs(x1 * y2 - y1 * x2) / mod;  
       
-    return reqAns;
+    return reqAns
 
 def ccw(A, B, C):
+    '''
+    Check if a point C is counter-clockwise to AB.
+    '''
     return (C[1] - A[1])*(B[0]-A[0]) > (B[1]-A[1])*(C[0]-A[0])
 
 def is_intersect(A, B, C, D):
+    '''
+    Check if two line segments AB and CD intersect.
+    '''
     return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
 
 def line_line_segment_intersect(p, d, p1, p2):
     '''
-    p: point on the line.
-    d: direction vector of line of interest.
-    p1: first endpoint of line segment.
-    p2: second endpoint of line segment.
+    Check if a line defined by point p and direction d intersects
+    a segment p1p2.
     '''
     p = np.array(p)
     p1 = np.array(p1)
@@ -214,7 +156,9 @@ def line_line_segment_intersect(p, d, p1, p2):
 
 
 def minDistance(A, B, E) :  
-
+    '''
+    Minimum distance from a point E to line segment AB. Adapted from GeeksforGeeks.
+    '''
     A = np.array(A)
     B = np.array(B)
     E = np.array(E)
@@ -272,6 +216,9 @@ def minDistance(A, B, E) :
     return reqAns
 
 def is_left(A, B, C):
+    '''
+    Check if point C is to the left of AB.
+    '''
     A = np.array(A)
     B = np.array(B)
     C = np.array(C)
