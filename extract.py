@@ -131,9 +131,12 @@ if __name__ == "__main__":
 	points = np.array([item for sublist in trips for item in sublist])
 	headings = points[:, 2]
 	points = points[:, :2]
+
+	# Plot points.
 	plt.figure(1)
+	plt.title('Points before clarification')
 	for point in points:
-		plt.scatter(point[0], point[1])
+		plt.scatter(point[0], point[1], c='b')
 	
 
 	tree = KDTree(points, leaf_size=2)
@@ -227,7 +230,8 @@ if __name__ == "__main__":
 	pos = {}
 	for node in G:
 		pos[node] = [node.x, node.y]
-	plt.figure(2)
+	plt.figure(3)
+	plt.title('Generated Graph')
 	nx.draw(G, pos, node_size=10)
 		
 	plt.show()
