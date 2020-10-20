@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from math import *
+from copy import deepcopy
 
 import os
 
@@ -62,7 +63,7 @@ def get_training_data(n, location):
 		for i in range(len(traces)):
 			traces[i] = np.delete(traces[i], 2, axis=1)
 
-	return (pd.concat(frames), traces)
+	return traces
 
 def to_merge(candidate, G):
 	'''
@@ -92,7 +93,8 @@ def to_merge(candidate, G):
 	return False, None
 
 if __name__ == "__main__":
-	(data, traces) = get_training_data(1, "DR_USA_Roundabout_EP")
+	traces = get_training_data(1, "DR_USA_Roundabout_EP")
+	data = deepcopy(traces)
 	
 	# Preprocessing: eliminate traces with less than 50 points
 	# and thin out traces.
@@ -134,30 +136,49 @@ if __name__ == "__main__":
 
 
 	G = Graph()
-	a = 0
-	b = 0
-	count = 0
 	for i in range(0, len(trips)):
 		t = trips[i]
 		prevNode = None
 		for n in t:
-			count += 1
 			merge, closest_node = to_merge(n, G)
 			if merge:
 				if prevNode and not G.has_path(prevNode, closest_node, 5):
-					a += 1
 					G.add_edge(prevNode, closest_node)
 				prevNode = closest_node
 			else:
-				b += 1
 				G.add_node(n)
 				if prevNode:
 					G.add_edge(prevNode, n)
 				prevNode = n
-	print(count)
-	print(a)
-	print(b)
+	
+	G_copy = deepcopy(G)
+
+	print("Graphing...")
+	
+	plt.figure(1)
+	plt.title("Raw graph")
 	G.draw()
+	for trace in data:
+		for point in trace:
+			plt.scatter(point[0], point[1], c='b', alpha=0.05)
+	'''
+	plt.figure(2)
+	plt.title("Cleanup: Deleting edges based on node heading vs edge heading")
+	G.cleanup()
+	G.draw()
+	for trace in data:
+		for point in trace:
+			plt.scatter(point[0], point[1], c='b', alpha=0.05)
+	'''
+	plt.figure(3)
+	plt.title("Cleanup: Second order")
+	G_copy.second_order_cleanup()
+	G_copy.draw()
+	
+	for trace in data:
+		for point in trace:
+			plt.scatter(point[0], point[1], c='b', alpha=0.05)
+	
 	plt.show()
 				
 

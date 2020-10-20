@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from node import Node
-from utils import distance, is_intersect
+from utils import distance, is_intersect, edge_heading
 from shapely.geometry import LineString
 from collections import deque
 
@@ -16,11 +16,11 @@ class Graph:
         return list(self.mapping.keys())
 
     def edges(self):
-        edges = set()
+        edges = []
         for node in self.mapping:
             for neighbor in self.mapping[node]:
                 if (node, neighbor) not in edges:
-                    edges.add((node, neighbor))
+                    edges.append((node, neighbor))
         return edges
     
     def add_node(self, node):
@@ -40,21 +40,20 @@ class Graph:
         visited.add(start)
 
         queue = deque()
-        queue.append(start)
+        queue.append((start, 0))
 
         while queue:
-            v = queue.popleft()
+            v, distance = queue.popleft()
             if v == end:
                 return True
 
-            if length == 0:
+            if distance > length:
                 return False
 
             for neighbor in self.mapping[v]:
                 if neighbor not in visited:
-                    queue.append(neighbor)
+                    queue.append((neighbor, distance + 1))
                     visited.add(neighbor)
-            length -= 1
 
         return False
         
@@ -74,40 +73,30 @@ class Graph:
             if node in self.mapping[other]:
                 self.mapping[other].remove(node)
 
-    def bridge(self):
-        for node in self.mapping:
-            if len(self.mapping[node]) == 0:
-                for target in self.mapping:
-                    if target != node and distance(node.x, node.y, target.x, target.y) < 6 and abs(node.heading - target.heading) < 0.4:
-                        print("Bridging"+str(node.x)+str(node.y))
-                        self.mapping[node].append(target)
-
-    def merge(self):
-        to_delete = []
-        for node in self.mapping:
-            for target in self.mapping:
-                if target != node and distance(node.x, node.y, target.x, target.y) < 1.4:
-                    print("Merging" + str(node.x) + str(node.y))
-                    to_delete.append(target)
-                    self.mapping[node] += self.mapping[target]
-        for node in to_delete:
-            self.delete_node(target)
-
-    def merge_edges(self):
-        for edge1 in self.edges():
-            for edge2 in self.edges():
-                A = [edge1[0].x, edge1[0].y]
-                B = [edge1[1].x, edge1[1].y]
-                C = [edge2[0].x, edge2[0].y]
-                D = [edge2[1].x, edge2[1].y]
-                if edge1 != edge2 and is_intersect(A, B, C, D):
-                    l1 = LineString([tuple(A), tuple(B)])
-                    l2 = LineString([tuple(C), tuple(D)])
-                    print(l1.intersection(l2))
+    def delete_edge(self, start, end):
+        self.mapping[start].remove(end)
 
         
-        
-    
-    
+    def cleanup(self):
+        for edge in self.edges():
+            start = edge[0]
+            end = edge[1]
+            if abs(edge_heading(start, end) - start.heading) > 0.4:
+                if len(self.mapping[start]) > 1:
+                    self.mapping[start].remove(end)
+            #Compare heading between nodes to heading of start node. If too far off, delete edge.
+
+
+    def second_order_cleanup(self):
+            for edge in self.edges():
+                first = edge[0]
+                second = edge[1]
+                if len(self.mapping[second]) > 1:
+                    for third in self.mapping[second]:
+                        if len(self.mapping[third]) == 1:
+                            fourth = self.mapping[third][0]
+                            if abs(edge_heading(second, third) - edge_heading(third, fourth)) > 0.5:
+                                self.mapping[second].remove(third)
+
 
     

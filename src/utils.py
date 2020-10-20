@@ -48,6 +48,8 @@ def edge_heading(p1, p2):
     if (length == 0):
         return 0
     else:
+        if vector[1] <= 0:
+            return -np.arccos(np.dot(vector/length, [1, 0]))
         return np.arccos(np.dot(vector/length, [1, 0]))
 
 def edge_dist(p1, p2, p3):
