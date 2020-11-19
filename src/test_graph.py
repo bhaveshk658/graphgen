@@ -7,8 +7,7 @@ from copy import deepcopy
 import os
 
 import utils
-from utils import dist
-from utils import dist_point_to_line
+from utils import dist, dist_point_to_line, edge_heading, curvature
 
 from node import Node
 
@@ -35,6 +34,7 @@ def get_training_data(n, location):
 
 		# Define rectangle of area to take points from.
 		box = [[960, 1015], [980, 1040]]
+		#box = [[1003, 1020], [1018, 1025]]
 		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 		frames.append(data)
 
@@ -65,7 +65,7 @@ def get_training_data(n, location):
 
 	return traces
 
-def to_merge(candidate, G):
+def to_merge(candidate, G, dist_limit, heading_limit):
 	'''
 	Determines if a candidate node should be merged into the graph.
 	Returns whether or not to merge, the target edge,
@@ -82,7 +82,7 @@ def to_merge(candidate, G):
 		temp_heading = abs(candidate.heading - edge[0].heading)
 		
 		# Check merge parameters.
-		if temp_dist < 3 and temp_heading < 0.2:
+		if temp_dist < dist_limit and temp_heading < heading_limit:
 			d1 = utils.distance(edge[0].x, edge[0].y, candidate.x, candidate.y)
 			d2 = utils.distance(edge[1].x, edge[1].y, candidate.x, candidate.y)
 			if (d1 < d2):
@@ -95,7 +95,6 @@ def to_merge(candidate, G):
 if __name__ == "__main__":
 	traces = get_training_data(1, "DR_USA_Roundabout_EP")
 	data = deepcopy(traces)
-	
 	# Preprocessing: eliminate traces with less than 50 points
 	# and thin out traces.
 	trips = []
@@ -115,7 +114,7 @@ if __name__ == "__main__":
 			point = c[i]
 		trips.append(np.array(trip))
 	trips = np.array(trips)
-	
+
 	# k-d tree requires flattened array.
 	lengths = [len(trip) for trip in trips]
 	points = np.array([item for sublist in trips for item in sublist])
@@ -134,34 +133,85 @@ if __name__ == "__main__":
 		points = points[l:]
 		headings = headings[l:]
 
+	plt.xlim(969, 1015)
+	plt.ylim(980, 1040)
+	rb = [0, 1, 8, 11, 14, 15, 18, 19, 21, 24]
+	rb_trips = [trips[i] for i in rb]
 
-	G = Graph()
-	for i in range(0, len(trips)):
-		t = trips[i]
-		prevNode = None
-		for n in t:
-			merge, closest_node = to_merge(n, G)
-			if merge:
-				if prevNode and not G.has_path(prevNode, closest_node, 5):
-					G.add_edge(prevNode, closest_node)
-				prevNode = closest_node
-			else:
-				G.add_node(n)
-				if prevNode:
-					G.add_edge(prevNode, n)
-				prevNode = n
-	
-	G_copy = deepcopy(G)
+	br = [6, 12, 13, 20, 22, 25, 26, 27]
+	br_trips = [trips[i] for i in br]
 
-	print("Graphing...")
-	
+	tr = [2, 7, 10]
+	tr_trips = [trips[i] for i in tr]
+
+	rt = [3, 4, 17]
+	rt_trips = [trips[i] for i in rt]
+
+	bt = [9, 23]
+	bt_trips = [trips[i] for i in bt]
+	"""
+	colors = ['r', 'b', 'g', 'y', 'k']
+	plt.figure(0)
+	plt.xlim(969, 1015)
+	plt.ylim(980, 1040)
+	for i in rb:
+		for node in trips[i]:
+			plt.scatter(node.x, node.y, c='r')
+	plt.figure(1)
+	plt.xlim(969, 1015)
+	plt.ylim(980, 1040)
+	for i in br:
+		for node in trips[i]:
+			plt.scatter(node.x, node.y, c='b')
+	plt.figure(2)
+	plt.xlim(969, 1015)
+	plt.ylim(980, 1040)
+	for i in tr:
+		for node in trips[i]:
+			plt.scatter(node.x, node.y, c='g')
+	plt.figure(3)
+	plt.xlim(969, 1015)
+	plt.ylim(980, 1040)
+	for i in rt:
+		for node in trips[i]:
+			plt.scatter(node.x, node.y, c='y')
+	plt.figure(4)
+	plt.xlim(969, 1015)
+	plt.ylim(980, 1040)
+	for i in bt:
+		for node in trips[i]:
+			plt.scatter(node.x, node.y, c='k')
+	"""
+
+	def convert_to_graph(trips):
+		target = None
+		G = Graph()
+		for i in range(0, len(trips)):
+			t = trips[i]
+			prevNode = None
+			for j in range(len(t)):
+				n = t[j]
+				merge, closest_node = to_merge(n, G, 3, 0.2)
+				if merge:
+					if prevNode and not G.has_path(prevNode, closest_node, 5):
+						G.add_edge(prevNode, closest_node)
+					prevNode = closest_node
+				else:
+					G.add_node(n)
+					if prevNode:
+						G.add_edge(prevNode, n)
+					prevNode = n
+		return G
+
+	'''
 	plt.figure(1)
 	plt.title("Raw graph")
 	G.draw()
+	plt.scatter(960, 980, c='b', alpha=0.05)
 	for trace in data:
 		for point in trace:
 			plt.scatter(point[0], point[1], c='b', alpha=0.05)
-	'''
+	
 	plt.figure(2)
 	plt.title("Cleanup: Deleting edges based on node heading vs edge heading")
 	G.cleanup()
@@ -169,7 +219,7 @@ if __name__ == "__main__":
 	for trace in data:
 		for point in trace:
 			plt.scatter(point[0], point[1], c='b', alpha=0.05)
-	'''
+	
 	plt.figure(3)
 	plt.title("Cleanup: Second order")
 	G_copy.second_order_cleanup()
@@ -178,7 +228,7 @@ if __name__ == "__main__":
 	for trace in data:
 		for point in trace:
 			plt.scatter(point[0], point[1], c='b', alpha=0.05)
-	
+	'''
 	plt.show()
 				
 

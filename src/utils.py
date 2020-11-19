@@ -228,6 +228,20 @@ def is_left(A, B, C):
     return np.cross(B[0]-A[0], C[1]-A[1]) - np.cross(B[1]-A[1], C[0]-A[0]) > 0
 
 
+def triangle_area(A, B, C):
+    """
+    Computes area of triangle given by nodes A, B, C.
+    """
+    area = abs((A.x*(B.y-C.y) + B.x*(C.y-A.y) + C.x*(A.y-B.y)) / 2)
+    return area
+
+
+def curvature(A, B, C):
+    """
+    Computes curvature of three nodes A, B, C.
+    """
+    return (4*triangle_area(A, B, C)) / (node_dist(A, B)*node_dist(B, C)*node_dist(A, C))
+
 
 
 

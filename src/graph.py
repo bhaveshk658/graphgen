@@ -60,7 +60,7 @@ class Graph:
 
     def draw(self):
         for node in self.mapping:
-            plt.scatter(node.x, node.y, c='r')
+            plt.scatter(node.x, node.y)
 
         for node in self.mapping:
             for target in self.mapping[node]:

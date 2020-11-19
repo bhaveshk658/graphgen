@@ -1,0 +1,40 @@
+trips[0]: 0
+trips[1]: 0
+trips[2]: 2
+trips[3]: 3
+trips[4]: 3
+trips[5]: ??
+trips[6]: 1
+trips[7]: 2
+trips[8]: 0
+trips[9]: 4
+trips[10]: 2
+trips[11]: 0
+trips[12]: 1
+trips[13]: 1
+trips[14]: 0
+trips[15]: 0
+trips[16]: right to left (EXCEPTION)
+trips[17]: 3
+trips[18]: 0
+trips[19]: 0
+trips[20]: 1
+trips[21]: 0
+trips[22]: 1
+trips[23]: 4
+trips[24]: 0
+trips[25]: 1
+trips[26]: 1
+trips[27]: 1
+trips[28]: ??
+trips[29]: ??
+
+
+key:
+r-b = 0
+b-r = 1
+t-r = 2
+r-t = 3
+b-t = 4
+t-b = 5
+
