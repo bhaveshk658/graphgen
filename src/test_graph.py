@@ -24,7 +24,6 @@ def get_training_data(n, location):
 	Returns a dataframe of n files compiled together +
 	A list of all traces
 	'''
-	frames = []
 	traces = []
 
 	for i in range(n):
@@ -34,9 +33,7 @@ def get_training_data(n, location):
 
 		# Define rectangle of area to take points from.
 		box = [[960, 1015], [980, 1040]]
-		#box = [[1003, 1020], [1018, 1025]]
 		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
-		frames.append(data)
 
 		# Add the trace for each car j to the list of traces.
 		# Contains x, y, x-velocity, y-velocity.
@@ -92,143 +89,96 @@ def to_merge(candidate, G, dist_limit, heading_limit):
 
 	return False, None
 
+def convert_to_graph(trips):
+	"""
+	Converts a set of trips into a directed graph as defined in graph.py
+	"""
+	G = Graph()
+	for i in range(0, len(trips)):
+		t = trips[i]
+		prevNode = None
+		for j in range(len(t)):
+			n = t[j]
+			merge, closest_node = to_merge(n, G, 3, 0.2)
+			if merge:
+				if prevNode and not G.has_path(prevNode, closest_node, 5):
+					G.add_edge(prevNode, closest_node)
+				prevNode = closest_node
+			else:
+				G.add_node(n)
+				if prevNode:
+					G.add_edge(prevNode, n)
+				prevNode = n
+	return G
+
 if __name__ == "__main__":
 	traces = get_training_data(1, "DR_USA_Roundabout_EP")
+
+	# Deepcopy original data to plot if needed.
 	data = deepcopy(traces)
+
 	# Preprocessing: eliminate traces with less than 50 points
 	# and thin out traces.
 	trips = []
 	for c in traces:
-
+		# If there are less than 50 points, skip this trace.
 		if (len(c) < 50):
 			continue
-
 		trip = []
 		point = c[0]
 		for i in range(1, len(c)):
-
+			# If the point is less than 1 unit away, skip it.
 			if dist(point, c[i]) < 1:
 				continue
-
-			trip.append(np.array((c[i][0], c[i][1], c[i][2])))
+			trip.append([c[i][0], c[i][1], c[i][2]])
 			point = c[i]
-		trips.append(np.array(trip))
-	trips = np.array(trips)
+		trips.append(trip)
 
-	# k-d tree requires flattened array.
-	lengths = [len(trip) for trip in trips]
-	points = np.array([item for sublist in trips for item in sublist])
-	headings = points[:, 2]
-	points = points[:, :2]
-
-	# Convert flattened modified points to traces of Nodes.
-	trips = []
-	for l in lengths:
-		trip = []
-		temp = points[:l]
-		temp_headings = headings[:l]
-		for i in range(len(temp)):
-			trip.append(Node(temp[i][0], temp[i][1], temp_headings[i]))
-		trips.append(np.array(trip))
-		points = points[l:]
-		headings = headings[l:]
-
+	# Convert each point to a node.
+	for trip in trips:
+		for i in range(len(trip)):
+			point = trip[i]
+			node = Node(point[0], point[1], point[2])
+			trip[i] = node
+	
+	# Plot nodes section by section (done manually).
 	plt.xlim(969, 1015)
 	plt.ylim(980, 1040)
+
 	rb = [0, 1, 8, 11, 14, 15, 18, 19, 21, 24]
 	rb_trips = [trips[i] for i in rb]
+	rb_graph = convert_to_graph(rb_trips)
+	rb_graph.draw()
 
 	br = [6, 12, 13, 20, 22, 25, 26, 27]
 	br_trips = [trips[i] for i in br]
+	br_graph = convert_to_graph(br_trips)
+	br_graph.draw()
 
 	tr = [2, 7, 10]
 	tr_trips = [trips[i] for i in tr]
+	tr_graph = convert_to_graph(tr_trips)
+	tr_graph.draw()
 
-	rt = [3, 4, 17]
+	rt = [3, 17]
 	rt_trips = [trips[i] for i in rt]
+	rt_graph = convert_to_graph(rt_trips)
+	rt_graph.draw()
+
+	special = [4]
+	special_trips = [trips[i] for i in special]
+	special_graph = convert_to_graph(special_trips)
+	special_graph.draw()
 
 	bt = [9, 23]
 	bt_trips = [trips[i] for i in bt]
+	bt_graph = convert_to_graph(bt_trips)
+	bt_graph.draw()
 	"""
-	colors = ['r', 'b', 'g', 'y', 'k']
-	plt.figure(0)
-	plt.xlim(969, 1015)
-	plt.ylim(980, 1040)
-	for i in rb:
-		for node in trips[i]:
-			plt.scatter(node.x, node.y, c='r')
-	plt.figure(1)
-	plt.xlim(969, 1015)
-	plt.ylim(980, 1040)
-	for i in br:
-		for node in trips[i]:
-			plt.scatter(node.x, node.y, c='b')
-	plt.figure(2)
-	plt.xlim(969, 1015)
-	plt.ylim(980, 1040)
-	for i in tr:
-		for node in trips[i]:
-			plt.scatter(node.x, node.y, c='g')
-	plt.figure(3)
-	plt.xlim(969, 1015)
-	plt.ylim(980, 1040)
-	for i in rt:
-		for node in trips[i]:
-			plt.scatter(node.x, node.y, c='y')
-	plt.figure(4)
-	plt.xlim(969, 1015)
-	plt.ylim(980, 1040)
-	for i in bt:
-		for node in trips[i]:
-			plt.scatter(node.x, node.y, c='k')
+	for trace in data:
+		for point in trace:
+			plt.scatter(point[0], point[1], c='b', alpha=0.05)
 	"""
-
-	def convert_to_graph(trips):
-		target = None
-		G = Graph()
-		for i in range(0, len(trips)):
-			t = trips[i]
-			prevNode = None
-			for j in range(len(t)):
-				n = t[j]
-				merge, closest_node = to_merge(n, G, 3, 0.2)
-				if merge:
-					if prevNode and not G.has_path(prevNode, closest_node, 5):
-						G.add_edge(prevNode, closest_node)
-					prevNode = closest_node
-				else:
-					G.add_node(n)
-					if prevNode:
-						G.add_edge(prevNode, n)
-					prevNode = n
-		return G
-
-	'''
-	plt.figure(1)
-	plt.title("Raw graph")
-	G.draw()
-	plt.scatter(960, 980, c='b', alpha=0.05)
-	for trace in data:
-		for point in trace:
-			plt.scatter(point[0], point[1], c='b', alpha=0.05)
-	
-	plt.figure(2)
-	plt.title("Cleanup: Deleting edges based on node heading vs edge heading")
-	G.cleanup()
-	G.draw()
-	for trace in data:
-		for point in trace:
-			plt.scatter(point[0], point[1], c='b', alpha=0.05)
-	
-	plt.figure(3)
-	plt.title("Cleanup: Second order")
-	G_copy.second_order_cleanup()
-	G_copy.draw()
-	
-	for trace in data:
-		for point in trace:
-			plt.scatter(point[0], point[1], c='b', alpha=0.05)
-	'''
 	plt.show()
 				
 
