@@ -111,6 +111,29 @@ def convert_to_graph(trips):
 				prevNode = n
 	return G
 
+def clean(traces, length_threshold, dist_threshold):
+	"""
+	Clean a list of traces, Eliminate traces with length
+	less than length_threshold and eliminate points that are
+	within dist_threshold of each other.
+	"""
+	trips = []
+	for c in traces:
+		# If there are less than length_threshold points, skip this trace.
+		if (len(c) < length_threshold):
+			continue
+		trip = []
+		point = c[0]
+		for i in range(1, len(c)):
+			# If the point is less than dist_threshold unit away, skip it.
+			if dist(point, c[i]) < dist_threshold:
+				continue
+			trip.append([c[i][0], c[i][1], c[i][2]])
+			point = c[i]
+		trips.append(trip)
+
+	return trips
+
 if __name__ == "__main__":
 	traces = get_training_data(1, "DR_USA_Roundabout_EP")
 
@@ -119,20 +142,7 @@ if __name__ == "__main__":
 
 	# Preprocessing: eliminate traces with less than 50 points
 	# and thin out traces.
-	trips = []
-	for c in traces:
-		# If there are less than 50 points, skip this trace.
-		if (len(c) < 50):
-			continue
-		trip = []
-		point = c[0]
-		for i in range(1, len(c)):
-			# If the point is less than 1 unit away, skip it.
-			if dist(point, c[i]) < 1:
-				continue
-			trip.append([c[i][0], c[i][1], c[i][2]])
-			point = c[i]
-		trips.append(trip)
+	trips = clean(traces, 50, 1)
 
 	# Convert each point to a node.
 	for trip in trips:
@@ -174,11 +184,7 @@ if __name__ == "__main__":
 	bt_trips = [trips[i] for i in bt]
 	bt_graph = convert_to_graph(bt_trips)
 	bt_graph.draw()
-	"""
-	for trace in data:
-		for point in trace:
-			plt.scatter(point[0], point[1], c='b', alpha=0.05)
-	"""
+
 	plt.show()
 				
 
