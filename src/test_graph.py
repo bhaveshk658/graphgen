@@ -99,6 +99,8 @@ def convert_to_graph(trips):
 		prevNode = None
 		for j in range(len(t)):
 			n = t[j]
+			if not isinstance(n, (type, Node)):
+				n = Node(n[0], n[1], n[2])
 			merge, closest_node = to_merge(n, G, 3, 0.2)
 			if merge:
 				if prevNode and not G.has_path(prevNode, closest_node, 5):
@@ -158,32 +160,36 @@ if __name__ == "__main__":
 	rb = [0, 1, 8, 11, 14, 15, 18, 19, 21, 24]
 	rb_trips = [trips[i] for i in rb]
 	rb_graph = convert_to_graph(rb_trips)
-	rb_graph.draw()
 
 	br = [6, 12, 13, 20, 22, 25, 26, 27]
 	br_trips = [trips[i] for i in br]
 	br_graph = convert_to_graph(br_trips)
-	br_graph.draw()
 
 	tr = [2, 7, 10]
 	tr_trips = [trips[i] for i in tr]
 	tr_graph = convert_to_graph(tr_trips)
-	tr_graph.draw()
 
 	rt = [3, 17]
 	rt_trips = [trips[i] for i in rt]
 	rt_graph = convert_to_graph(rt_trips)
-	rt_graph.draw()
 
 	special = [4]
 	special_trips = [trips[i] for i in special]
 	special_graph = convert_to_graph(special_trips)
-	special_graph.draw()
 
 	bt = [9, 23]
 	bt_trips = [trips[i] for i in bt]
 	bt_graph = convert_to_graph(bt_trips)
-	bt_graph.draw()
+
+	G = Graph()
+	G.mapping.update(rb_graph.mapping)
+	G.mapping.update(br_graph.mapping)
+	G.mapping.update(tr_graph.mapping)
+	G.mapping.update(rt_graph.mapping)
+	G.mapping.update(special_graph.mapping)
+	G.mapping.update(bt_graph.mapping)
+
+	G.draw()
 
 	plt.show()
 				
