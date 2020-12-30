@@ -13,8 +13,7 @@ def get_training_data(n, location):
 	traces = []
 
 	for i in range(n):
-		path = path.join("interaction-dataset-copy/recorded_trackfiles/"
-			+location, "vehicle_tracks_00"+str(i)+".csv")
+		path = path.join(location, "vehicle_tracks_00"+str(i)+".csv")
 		data = read_csv(path)
 
 		# Define rectangle of area to take points from.
