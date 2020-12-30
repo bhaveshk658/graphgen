@@ -7,9 +7,8 @@ from utils import dist
 def get_training_data(n, location):
 	'''
 	Get training data from n files from string location.
-	E.g. get_training_data(4, "DR_USA_Roundabout_EP")
-	Returns a dataframe of n files compiled together +
-	A list of all traces
+	E.g. get_training_data(4, "path/to/data")
+	Returns a list of all traces
 	'''
 	traces = []
 

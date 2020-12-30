@@ -143,7 +143,6 @@ class Graph:
         """
         if self.kd:
             return self.kd
-        points = self.get_points()
         tree = KDTree(np.array(self.points))
         self.kd = tree
         return tree
