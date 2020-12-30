@@ -10,12 +10,11 @@ import utils
 from utils import dist, dist_point_to_line, edge_heading, curvature
 
 from node import Node
-
 import networkx as nx
-
 from sklearn.neighbors import KDTree
-
 from graph import Graph
+from random import randint
+from similaritymeasures import frechet_dist
 
 def get_training_data(n, location):
 	'''
@@ -182,14 +181,31 @@ if __name__ == "__main__":
 	bt_graph = convert_to_graph(bt_trips)
 
 	G = Graph()
-	G.mapping.update(rb_graph.mapping)
-	G.mapping.update(br_graph.mapping)
-	G.mapping.update(tr_graph.mapping)
-	G.mapping.update(rt_graph.mapping)
-	G.mapping.update(special_graph.mapping)
-	G.mapping.update(bt_graph.mapping)
+	G.update(rb_graph)
+	G.update(br_graph)
+	G.update(tr_graph)
+	G.update(rt_graph)
+	G.update(special_graph)
+	G.update(bt_graph)
 
+	plt.figure(1)
 	G.draw()
+	plt.figure(2)
+	
+	index = randint(0, len(trips))
+	target = trips[index]
+	for i in range(len(target)):
+		node = target[i]
+		target[i] = [node.x, node.y, node.heading]
+
+	node_path, point_path = G.match_trace(target)
+
+	for node in node_path:
+		plt.scatter(node.x, node.y, c='g')
+	for point in target:
+		plt.scatter(point[0], point[1], c='b', alpha=0.5)
+
+	print(frechet_dist(np.array(target), np.array(point_path)))
 
 	plt.show()
 				
