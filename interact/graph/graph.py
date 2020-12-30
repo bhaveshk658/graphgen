@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
-from node import Node
-from utils import distance, is_intersect, edge_heading
 from shapely.geometry import LineString
 from collections import deque
 from sklearn.neighbors import KDTree
 import numpy as np
+
+from node import Node
 
 class Graph:
 
@@ -18,9 +18,15 @@ class Graph:
         self.kd = None
 
     def get_nodes(self):
+        """
+        Return a list of all nodes in the graph.
+        """
         return list(self.mapping.keys())
 
     def get_points(self):
+        """
+        Return a 2D array of all points (including headings) in the graph.
+        """
         nodes = self.get_nodes()
         for i in range(len(nodes)):
             node = nodes[i]
@@ -36,6 +42,9 @@ class Graph:
         return nodes, points
 
     def edges(self):
+        """
+        Return a list of tuples representing all edges in the graph.
+        """
         edges = []
         for node in self.mapping:
             for neighbor in self.mapping[node]:
@@ -44,12 +53,18 @@ class Graph:
         return edges
     
     def add_node(self, node):
+        """
+        Add a node to the graph
+        """
         if node not in self.mapping:
             self.mapping[node] = []
             self.nodes.append(node)
             self.points.append([node.x, node.y, node.heading])
     
     def add_edge(self, start, end):
+        """
+        Add an edge to the graph.
+        """
         if start in self.mapping:
             self.mapping[start].append(end)
         else:
@@ -60,6 +75,9 @@ class Graph:
             self.points.append([end.x, end.y, end.heading])
 
     def has_path(self, start, end, length):
+        """
+        Check if a path shorter than 'length' exists from start to end.
+        """
         visited = set()
         visited.add(start)
 
@@ -83,6 +101,9 @@ class Graph:
         
 
     def draw(self):
+        """
+        Scatter plot the graph.
+        """
         for node in self.mapping:
             plt.scatter(node.x, node.y, c='b')
 
@@ -92,6 +113,9 @@ class Graph:
                              textcoords='data', arrowprops=dict(arrowstyle="->", connectionstyle="arc3"))
 
     def delete_node(self, node):
+        """
+        Delete a node from the graph.
+        """
         self.mapping.pop(node, None)
         self.nodes.remove(node)
         self.points.remove([node.x, node.y, node.heading])
@@ -100,37 +124,23 @@ class Graph:
                 self.mapping[other].remove(node)
 
     def delete_edge(self, start, end):
+        """
+        Delete an edge from the graph.
+        """
         self.mapping[start].remove(end)
 
     def update(self, G):
+        """
+        Merge graph G into the graph.
+        """
         self.mapping.update(G.mapping)
         self.points += G.points
         self.nodes += G.nodes
 
-        
-    def cleanup(self):
-        for edge in self.edges():
-            start = edge[0]
-            end = edge[1]
-            if abs(edge_heading(start, end) - start.heading) > 0.4:
-                if len(self.mapping[start]) > 1:
-                    self.mapping[start].remove(end)
-            #Compare heading between nodes to heading of start node. If too far off, delete edge.
-
-
-    def second_order_cleanup(self):
-        for edge in self.edges():
-            first = edge[0]
-            second = edge[1]
-            if len(self.mapping[second]) > 1:
-                for third in self.mapping[second]:
-                    if len(self.mapping[third]) == 1:
-                        fourth = self.mapping[third][0]
-                        if abs(edge_heading(second, third) - edge_heading(third, fourth)) > 0.5:
-                            self.mapping[second].remove(third)
-
-
     def get_kd(self):
+        """
+        Get the graph's k-d tree, or make a new one.
+        """
         if self.kd:
             return self.kd
         points = self.get_points()
@@ -140,15 +150,21 @@ class Graph:
 
 
     def match_point(self, point):
+        """
+        Match a point to a node on the graph.
+        """
         print("Starting matching")
         tree = self.get_kd()
         print("Got tree")
-        dist, ind = tree.query(point)
+        _, ind = tree.query(point)
         print("Query done")
         print(ind)
         return self.nodes[ind[0][0]], self.points[ind[0][0]]
 
     def match_trace(self, trace):
+        """
+        Match a trace to a path of nodes on the graph.
+        """
         tree = self.get_kd()
         node_path = []
         point_path = []
