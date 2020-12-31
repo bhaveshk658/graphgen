@@ -54,8 +54,13 @@ G.update(rt_graph)
 G.update(special_graph)
 G.update(bt_graph)
 
+G.cleanup()
+G.draw()
+
 #evaluate_traces(G, traces, 'frechet')
-#evaluate_traces(G, traces, 'area')
-evaluate_traces(G, traces, 'pcm')
+evaluate_traces(G, traces, 'area')
+#evaluate_traces(G, traces, 'pcm')
 #evaluate_traces(G, traces, 'dtw')
+
+plt.show()
 

@@ -31,7 +31,7 @@ def to_merge(candidate, G, dist_limit, heading_limit):
 
 def convert_to_graph(trips):
 	"""
-	Converts a set of trips into a directed graph as defined in graph.py
+	Converts a set of trips into a directed graph.
 	"""
 	G = Graph()
 	for i in range(0, len(trips)):
