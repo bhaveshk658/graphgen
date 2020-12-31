@@ -5,6 +5,7 @@ from sklearn.neighbors import KDTree
 import numpy as np
 
 from graphgen.graph.node import Node
+from graphgen.graph.utils import node_dist
 
 class Graph:
 
@@ -172,6 +173,46 @@ class Graph:
             node_path.append(self.nodes[ind[0][0]])
             point_path.append(self.points[ind[0][0]])
         return node_path, point_path
+
+    def merge_nodes(self, node1, node2):
+        """
+        Merge two nodes together.
+        """
+        new_x = (node1.x + node2.x) / 2
+        new_y = (node1.y + node2.y) / 2
+        new_heading = -1
+
+        node1.x = new_x
+        node1.y = new_y
+        node1.heading = new_heading
+
+        if node1 in self.mapping and node2 in self.mapping:
+            for node in self.mapping[node2]:
+                if node not in self.mapping[node1]:
+                    self.mapping[node1].append(node)
+
+            del self.mapping[node2]
+
+            nodes = self.get_nodes()
+            for prev in nodes:
+                if node2 in self.mapping[prev]:
+                    self.mapping[prev].remove(node2)
+                    self.mapping[prev].append(node1)
+                    break
+        
+
+    def cleanup(self):
+        """
+        Cleanup a graph by merging similar nodes together
+        """
+        nodes = self.get_nodes()
+        count = 0
+        for node1 in nodes:
+            for node2 in nodes:
+                if node1 != node2 and node_dist(node1, node2) < 1:
+                    count += 1
+                    self.merge_nodes(node1, node2)
+
 
 
     

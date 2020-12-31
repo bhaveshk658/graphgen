@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="graphgen",
-    version="0.0.3",
+    version="0.0.6",
     author="Bhavesh Kalisetti",
     author_email="bhaveshk658@berkeley.edu",
     description="A package to generate graphs from GPS data",

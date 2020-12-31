@@ -1,4 +1,6 @@
 from graphgen.generate.utils import distance, dist_point_to_line
+from graphgen.graph.graph import Graph
+from graphgen.graph.node import Node
 
 def to_merge(candidate, G, dist_limit, heading_limit):
 	'''
@@ -26,3 +28,27 @@ def to_merge(candidate, G, dist_limit, heading_limit):
 				return True, edge[1]
 
 	return False, None
+
+def convert_to_graph(trips):
+	"""
+	Converts a set of trips into a directed graph as defined in graph.py
+	"""
+	G = Graph()
+	for i in range(0, len(trips)):
+		t = trips[i]
+		prevNode = None
+		for j in range(len(t)):
+			n = t[j]
+			if not isinstance(n, (type, Node)):
+				n = Node(n[0], n[1], n[2])
+			merge, closest_node = to_merge(n, G, 3, 0.2)
+			if merge:
+				if prevNode and not G.has_path(prevNode, closest_node, 5):
+					G.add_edge(prevNode, closest_node)
+				prevNode = closest_node
+			else:
+				G.add_node(n)
+				if prevNode:
+					G.add_edge(prevNode, n)
+				prevNode = n
+	return G

@@ -1,1 +1,1 @@
-from graphgen.generate import *
+from graphgen.generate.generate import *

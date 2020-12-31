@@ -1,4 +1,4 @@
-from os import path
+import os
 from pandas import read_csv
 import numpy as np
 
@@ -13,7 +13,7 @@ def get_training_data(n, location):
 	traces = []
 
 	for i in range(n):
-		path = path.join(location, "vehicle_tracks_00"+str(i)+".csv")
+		path = os.path.join(location, "vehicle_tracks_00"+str(i)+".csv")
 		data = read_csv(path)
 
 		# Define rectangle of area to take points from.

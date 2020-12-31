@@ -1,1 +1,1 @@
-from graphgen.data import *
+from graphgen.data.data import *
