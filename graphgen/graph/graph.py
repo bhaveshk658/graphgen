@@ -4,7 +4,7 @@ from collections import deque
 from sklearn.neighbors import KDTree
 import numpy as np
 
-from node import Node
+from graphgen.graph.node import Node
 
 class Graph:
 

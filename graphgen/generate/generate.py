@@ -1,4 +1,4 @@
-from utils import distance, dist_point_to_line
+from graphgen.generate.utils import distance, dist_point_to_line
 
 def to_merge(candidate, G, dist_limit, heading_limit):
 	'''

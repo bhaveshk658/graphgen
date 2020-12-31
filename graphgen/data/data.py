@@ -2,7 +2,7 @@ from os import path
 from pandas import read_csv
 import numpy as np
 
-from utils import dist
+from graphgen.data.utils import dist
 
 def get_training_data(n, location):
 	'''
