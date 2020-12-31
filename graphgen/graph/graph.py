@@ -206,11 +206,9 @@ class Graph:
         Cleanup a graph by merging similar nodes together
         """
         nodes = self.get_nodes()
-        count = 0
         for node1 in nodes:
             for node2 in nodes:
                 if node1 != node2 and node_dist(node1, node2) < 1:
-                    count += 1
                     self.merge_nodes(node1, node2)
 
 

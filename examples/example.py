@@ -3,6 +3,7 @@ from graphgen.data import get_training_data
 from graphgen.graph import Graph
 from graphgen.graph import Node
 from graphgen.generate.generate import to_merge, convert_to_graph
+from graphgen.metric import evaluate_traces
 import matplotlib.pyplot as plt
 
 path = "/Users/bkalisetti658/desktop/graphgen/data/InteractionDR1.0/recorded_trackfiles/DR_USA_Roundabout_EP"
@@ -53,11 +54,8 @@ G.update(rt_graph)
 G.update(special_graph)
 G.update(bt_graph)
 
-print(len(G.get_nodes()))
-G.cleanup()
-print(len(G.get_nodes()))
-
-plt.figure(1)
-G.draw()
-plt.show()
+#evaluate_traces(G, traces, 'frechet')
+#evaluate_traces(G, traces, 'area')
+evaluate_traces(G, traces, 'pcm')
+#evaluate_traces(G, traces, 'dtw')
 
