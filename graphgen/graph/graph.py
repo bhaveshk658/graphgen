@@ -22,7 +22,7 @@ class Graph:
         """
         Return a list of all nodes in the graph.
         """
-        return list(self.mapping.keys())
+        return self.nodes
 
     def get_points(self):
         """

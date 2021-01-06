@@ -4,12 +4,12 @@ import numpy as np
 
 from graphgen.data.utils import dist
 
-def get_training_data(n, location):
-	'''
+def get_training_data(n, location, box=None):
+	"""
 	Get training data from n files from string location.
 	E.g. get_training_data(4, "path/to/data")
 	Returns a list of all traces
-	'''
+	"""
 	traces = []
 
 	for i in range(n):
@@ -17,8 +17,8 @@ def get_training_data(n, location):
 		data = read_csv(path)
 
 		# Define rectangle of area to take points from.
-		box = [[960, 1015], [980, 1040]]
-		data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
+		if box:
+			data = data.loc[(data['x'] > box[0][0]) & (data['x'] < box[0][1]) & (data['y'] > box[1][0]) & (data['y'] < box[1][1])]
 
 		# Add the trace for each car j to the list of traces.
 		# Contains x, y, x-velocity, y-velocity.

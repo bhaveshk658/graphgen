@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 
 path = "/Users/bkalisetti658/desktop/graphgen/data/InteractionDR1.0/recorded_trackfiles/DR_USA_Roundabout_EP"
 
-traces = get_training_data(1, path)
+box = [[960, 1015], [980, 1040]]
+traces = get_training_data(1, path, box)
 
 trips = graphgen.data.data.clean(traces, 50, 1)
 
@@ -17,6 +18,10 @@ for trip in trips:
         point = trip[i]
         node = graphgen.graph.node.Node(point[0], point[1], point[2])
         trip[i] = node
+
+for trip in trips:
+    for node in trip:
+        plt.scatter(node.x, node.y, c='g', alpha=0.5)
 
 
 plt.xlim(969, 1015)
@@ -54,7 +59,7 @@ G.update(rt_graph)
 G.update(special_graph)
 G.update(bt_graph)
 
-G.cleanup()
+#G.cleanup()
 G.draw()
 
 #evaluate_traces(G, traces, 'frechet')
