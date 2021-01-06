@@ -19,13 +19,31 @@ for trip in trips:
         node = graphgen.graph.node.Node(point[0], point[1], point[2])
         trip[i] = node
 
-for trip in trips:
+"""
+for node in trips[16]:
+    plt.scatter(node.x, node.y, c='g', alpha=0.5)
+for node in trips[5]:
+    plt.scatter(node.x, node.y, c='r', alpha=0.5)
+for node in trips[28]:
+    plt.scatter(node.x, node.y, c='b', alpha=0.5)
+for node in trips[29]:
+    plt.scatter(node.x, node.y, c='k', alpha=0.5)
+"""
+
+for i in range(len(trips)):
+    if i == 5 or i == 28 or i == 29:
+        continue
+    trip = trips[i]
     for node in trip:
         plt.scatter(node.x, node.y, c='g', alpha=0.5)
 
 
 plt.xlim(969, 1015)
 plt.ylim(980, 1040)
+
+rl = [16]
+rl_trips = [trips[i] for i in rl]
+rl_graph = convert_to_graph(rl_trips)
 
 rb = [0, 1, 8, 11, 14, 15, 18, 19, 21, 24]
 rb_trips = [trips[i] for i in rb]
@@ -52,6 +70,7 @@ bt_trips = [trips[i] for i in bt]
 bt_graph = convert_to_graph(bt_trips)
 
 G = Graph()
+G.update(rl_graph)
 G.update(rb_graph)
 G.update(br_graph)
 G.update(tr_graph)
@@ -59,11 +78,11 @@ G.update(rt_graph)
 G.update(special_graph)
 G.update(bt_graph)
 
-#G.cleanup()
+G.cleanup()
 G.draw()
 
 #evaluate_traces(G, traces, 'frechet')
-evaluate_traces(G, traces, 'area')
+#evaluate_traces(G, traces, 'area')
 #evaluate_traces(G, traces, 'pcm')
 #evaluate_traces(G, traces, 'dtw')
 

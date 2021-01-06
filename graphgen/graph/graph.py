@@ -193,6 +193,9 @@ class Graph:
 
             del self.mapping[node2]
 
+            self.nodes = self.mapping.keys()
+            self.points = [[node.x, node.y, node.heading] for node in self.nodes]
+
             nodes = self.get_nodes()
             for prev in nodes:
                 if node2 in self.mapping[prev]:
