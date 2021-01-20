@@ -5,7 +5,7 @@ from sklearn.neighbors import KDTree
 import numpy as np
 
 from graphgen.graph.node import Node
-from graphgen.graph.utils import node_dist
+from graphgen.graph.utils import node_dist, edge_dist
 
 class Graph:
 
@@ -134,16 +134,76 @@ class Graph:
         """
         Merge graph G into the graph.
         """
-        self.mapping.update(G.mapping)
-        self.points += G.points
-        self.nodes += G.nodes
+        """
+        Find start node of G (G should be a specific lane/path)
+        For node starting at start:
+            Query nearest edge in self
+            d = distance from edge to n
+            If d < threshold:
+                merge node into edge
+            else:
+                add node to graph
+
+        """
+        # empty graph check
+        if not self.mapping:
+            self.mapping.update(G.mapping)
+            self.nodes += G.nodes
+            self.points += G.points
+            return
+
+        start = None
+        end_nodes = np.array(G.edges())[:, 1]
+        for node in G.nodes:
+            if node not in end_nodes:
+                start = node
+                break
+
+        node_edge_map = dict()
+        point = start
+        i = 0
+        while point:
+            if len(G.mapping[point]) != 0:
+                next = G.mapping[point][0]
+            else:
+                next = None
+            d, edge = self.get_nearest_edge(point)
+            heading_diff = abs(point.heading - edge[0].heading)
+            if d < 0 and heading_diff < 0.2:
+                
+                node_edge_map[point] = edge
+            point = next
+            i += 1
+
+        i = 0
+        while start:
+            if len(G.mapping[start]) != 0:
+                next = G.mapping[start][0]
+            else:
+                next = None
+            if start in node_edge_map:
+                edge = node_edge_map[start]
+                print(i, start.x, start.y, edge[0].x, edge[0].y, edge[1].x, edge[1].y)
+                #if edge[1] in self.mapping[edge[0]]:
+                self.mapping[edge[0]].remove(edge[1])
+                self.mapping[edge[0]].append(start)
+                self.mapping[start] = [edge[1]]
+            else:
+                self.mapping[start] = [next] if next else []
+            start = next
+            i += 1
+        
+
+        
 
     def get_kd(self):
         """
         Get the graph's k-d tree, or make a new one.
         """
+        """
         if self.kd:
             return self.kd
+        """
         tree = KDTree(np.array(self.points))
         self.kd = tree
         return tree
@@ -153,12 +213,8 @@ class Graph:
         """
         Match a point to a node on the graph.
         """
-        print("Starting matching")
         tree = self.get_kd()
-        print("Got tree")
-        _, ind = tree.query(point)
-        print("Query done")
-        print(ind)
+        _, ind = tree.query([point])
         return self.nodes[ind[0][0]], self.points[ind[0][0]]
 
     def match_trace(self, trace):
@@ -213,6 +269,20 @@ class Graph:
             for node2 in nodes:
                 if node1 != node2 and node_dist(node1, node2) < 1:
                     self.merge_nodes(node1, node2)
+
+    def get_nearest_edge(self, node):
+        """
+        Finds edge closest to node.
+        """
+        edges = self.edges()
+        min_dist = float('inf')
+        closest_edge = None
+        for edge in edges:
+            d = edge_dist(edge[0], edge[1], node)
+            if d < min_dist:
+                min_dist = d
+                closest_edge = edge
+        return min_dist, closest_edge
 
 
 

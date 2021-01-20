@@ -8,6 +8,9 @@ class Node:
 		self.y = y
 		self.heading = heading
 		self.total = 1
+	
+	def get_point(self):
+		return [self.x, self.y, self.heading]
 
 	def update(self, node):
 		self.x = ((self.x * self.total) + node.x) / (self.total + 1)

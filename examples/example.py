@@ -30,12 +30,7 @@ for node in trips[29]:
     plt.scatter(node.x, node.y, c='k', alpha=0.5)
 """
 
-for i in range(len(trips)):
-    if i == 5 or i == 28 or i == 29:
-        continue
-    trip = trips[i]
-    for node in trip:
-        plt.scatter(node.x, node.y, c='g', alpha=0.5)
+
 
 
 plt.xlim(969, 1015)
@@ -69,18 +64,28 @@ bt = [9, 23]
 bt_trips = [trips[i] for i in bt]
 bt_graph = convert_to_graph(bt_trips)
 
+wrong = [5, 28, 29]
+
 G = Graph()
 G.update(rl_graph)
 G.update(rb_graph)
-G.update(br_graph)
-G.update(tr_graph)
-G.update(rt_graph)
-G.update(special_graph)
-G.update(bt_graph)
+#G.update(tr_graph)
+#G.update(br_graph)
+#G.update(rt_graph)
+#G.update(special_graph)
+#G.update(bt_graph)
+#G.cleanup()
+"""
+for i in range(len(trips)):
+    if i in wrong:
+        continue
+    trip = trips[i]
+    for node in trip:
+        plt.scatter(node.x, node.y, c='g', alpha=0.2)
 
-G.cleanup()
+
+"""
 G.draw()
-
 #evaluate_traces(G, traces, 'frechet')
 #evaluate_traces(G, traces, 'area')
 #evaluate_traces(G, traces, 'pcm')
