@@ -3,9 +3,11 @@ from shapely.geometry import LineString
 from collections import deque
 from sklearn.neighbors import KDTree
 import numpy as np
+from fastdtw import fastdtw
+from scipy.spatial.distance import euclidean
 
 from graphgen.graph.node import Node
-from graphgen.graph.utils import node_dist, edge_dist
+from graphgen.graph.utils import *
 
 class Graph:
 
@@ -33,6 +35,44 @@ class Graph:
             node = nodes[i]
             nodes[i] = [node.x, node.y, node.heading]
         return nodes
+
+    def get_lane_nodes(self):
+        """
+        Get nodes of a lane in order.
+        """
+        start = None
+        end_nodes = np.array(self.edges())[:, 1]
+        for node in self.nodes:
+            if node not in end_nodes:
+                start = node
+                break
+        nodes = []
+        while start:
+            nodes.append(start)
+            if len(self.mapping[start]) != 0:
+                start = self.mapping[start][0]
+            else:
+                start = None
+        return nodes
+    def get_lane_points(self):
+        """
+        Get points of a lane in order.
+        """
+        start = None
+        end_nodes = np.array(self.edges())[:, 1]
+        for node in self.nodes:
+            if node not in end_nodes:
+                start = node
+                break
+        points = []
+        while start:
+            points.append([start.x, start.y])
+            if len(self.mapping[start]) != 0:
+                start = self.mapping[start][0]
+            else:
+                start = None
+        return points
+
 
     def get_points_and_nodes(self):
         nodes = self.get_nodes()
@@ -151,7 +191,7 @@ class Graph:
             self.nodes += G.nodes
             self.points += G.points
             return
-
+        """
         start = None
         end_nodes = np.array(G.edges())[:, 1]
         for node in G.nodes:
@@ -192,7 +232,28 @@ class Graph:
                 self.mapping[start] = [next] if next else []
             start = next
             i += 1
+        """
+        self_nodes = self.get_lane_nodes()
+        G_nodes = G.get_lane_nodes()
+        x_start, x_end, y_start, y_end = self.id_merge_region(G)
+        while x_start <= x_end and y_start <= y_end:
+            node = self_nodes[x_start]
+            plt.scatter(node.x, node.y, c='g')
+            x_start += 1
+
+            node = G_nodes[y_start]
+            plt.scatter(node.x, node.y, c='g')
+            y_start += 1
         
+        while x_start <= x_end:
+            node = self_nodes[x_start]
+            plt.scatter(node.x, node.y, c='g')
+            x_start += 1
+        
+        while y_start <= y_end:
+            node = G_nodes[y_start]
+            plt.scatter(node.x, node.y, c='g')
+            y_start += 1
 
         
 
@@ -283,6 +344,41 @@ class Graph:
                 min_dist = d
                 closest_edge = edge
         return min_dist, closest_edge
+
+    def id_merge_region(self, G):
+        """
+        Finds portion of both graphs to merge together.
+        """
+        self_points = np.array(self.get_lane_points())
+        G_points = np.array(G.get_lane_points())
+        
+        _, path = fastdtw(self_points, G_points)
+
+        x_ind = []
+        y_ind = []
+        for pair in path:
+            x = self_points[pair[0]]
+            y = G_points[pair[1]]
+            if distance(x[0], x[1], y[0], y[1]) < 1.75:
+                x_ind.append(pair[0])
+                y_ind.append(pair[1])
+        
+        x_start = min(x_ind)
+        x_end = max(x_ind)
+
+        y_start = min(y_ind)
+        y_end = max(y_ind)
+
+        """
+        for i in range(x_start, x_end + 1):
+            plt.scatter(self_points[i][0], self_points[i][1], c='g')
+        for i in range(y_start, y_end + 1):
+            plt.scatter(G_points[i][0], G_points[i][1], c='g')
+
+        """
+
+        return x_start, x_end, y_start, y_end
+        
 
 
 

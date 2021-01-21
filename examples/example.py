@@ -33,7 +33,7 @@ for node in trips[29]:
 
 
 
-plt.xlim(969, 1015)
+plt.xlim(960, 1015)
 plt.ylim(980, 1040)
 
 rl = [16]
@@ -67,10 +67,12 @@ bt_graph = convert_to_graph(bt_trips)
 wrong = [5, 28, 29]
 
 G = Graph()
-G.update(rl_graph)
-G.update(rb_graph)
-#G.update(tr_graph)
-#G.update(br_graph)
+#G.update(rl_graph)
+#G.update(rb_graph)
+br_graph.draw()
+tr_graph.draw()
+G.update(tr_graph)
+G.update(br_graph)
 #G.update(rt_graph)
 #G.update(special_graph)
 #G.update(bt_graph)
@@ -85,11 +87,7 @@ for i in range(len(trips)):
 
 
 """
-G.draw()
-#evaluate_traces(G, traces, 'frechet')
-#evaluate_traces(G, traces, 'area')
-#evaluate_traces(G, traces, 'pcm')
-#evaluate_traces(G, traces, 'dtw')
+
 
 plt.show()
 
