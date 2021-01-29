@@ -12,7 +12,6 @@ box = [[960, 1015], [980, 1040]]
 traces = get_training_data(1, path, box)
 
 trips = graphgen.data.data.clean(traces, 50, 1)
-
 for trip in trips:
     for i in range(len(trip)):
         point = trip[i]
@@ -69,13 +68,13 @@ wrong = [5, 28, 29]
 G = Graph()
 #G.update(rl_graph)
 #G.update(rb_graph)
-br_graph.draw()
 tr_graph.draw()
+bt_graph.draw()
 G.update(tr_graph)
-G.update(br_graph)
+#G.update(br_graph)
 #G.update(rt_graph)
 #G.update(special_graph)
-#G.update(bt_graph)
+G.update(bt_graph)
 #G.cleanup()
 """
 for i in range(len(trips)):

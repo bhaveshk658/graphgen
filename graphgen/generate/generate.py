@@ -37,9 +37,7 @@ def convert_to_graph(trips):
 	for t in trips:
 		prevNode = None
 		for n in t:
-			if not isinstance(n, (type, Node)):
-				n = Node(n[0], n[1], n[2])
-			merge, closest_node = to_merge(n, G, 3, 0.2)
+			merge, closest_node = to_merge(n, G, 1.2, 0.7)
 			if merge:
 				closest_node.update(n)
 				if prevNode and not G.has_path(prevNode, closest_node, 5):
@@ -51,3 +49,17 @@ def convert_to_graph(trips):
 					G.add_edge(prevNode, n)
 				prevNode = n
 	return G
+
+
+def to_merge_new(candidate, G, merge_threshold):
+	# If G is empty, return False
+	if len(G.edges()) == 0:
+		return False
+
+	edges = G.edges()
+
+	return
+
+
+def convert_to_graph_new():
+	return Graph()

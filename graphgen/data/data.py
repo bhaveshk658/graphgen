@@ -1,6 +1,7 @@
 import os
 from pandas import read_csv
 import numpy as np
+from scipy.interpolate import interp1d
 
 from graphgen.data.utils import dist
 
@@ -70,3 +71,19 @@ def clean(traces, length_threshold, dist_threshold):
 		trips.append(trip)
 
 	return trips
+
+def compute_average(traces):
+	"""
+	Given a list of traces, computes the average trace.
+	"""
+	traces.sort(key=len)
+	new_len = len(traces[-1])
+	
+	# Interpolate each curve and replace
+	equalized_traces = []
+	for trace in traces:
+		trace = np.array(trace)
+		f = interp1d(trace[:, 0], trace[:, 1])
+		
+
+		
