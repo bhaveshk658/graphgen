@@ -76,7 +76,7 @@ def gravity(traces):
 	"""
 	Given a list of traces, perform Cao & Krumm preprocessing.
 	"""
-	return
+	return traces
 		
 
 		

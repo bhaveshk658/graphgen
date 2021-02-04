@@ -28,13 +28,11 @@ plt.ylim(980, 1040)
 rl = [16]
 rl_trips = [trips[i] for i in rl]
 rl_graph = convert_to_graph(rl_trips)
-rl_graph.draw()
 rl_nodes = rl_graph.get_lane_nodes()
 
 rb = [0, 1, 8, 11, 14, 15, 18, 19, 21, 24]
 rb_trips = [trips[i] for i in rb]
 rb_graph = convert_to_graph(rb_trips)
-rb_graph.draw()
 rb_nodes = rb_graph.get_lane_nodes()
 
 br = [6, 12, 13, 20, 22, 25, 26, 27]
@@ -64,7 +62,7 @@ bt_nodes = bt_graph.get_lane_nodes()
 
 
 
-lanes = [rb_nodes, rl_nodes, br_nodes, tr_nodes, rt_nodes, special_nodes, bt_nodes]
+lanes = [rl_nodes, rb_nodes, br_nodes, tr_nodes, rt_nodes, special_nodes, bt_nodes]
 
 G = convert_to_graph(lanes)
 G.draw()

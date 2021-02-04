@@ -37,7 +37,7 @@ def convert_to_graph(trips):
 	for t in trips:
 		prevNode = None
 		for n in t:
-			merge, closest_node = to_merge(n, G, 2.5, 0.2)
+			merge, closest_node = to_merge(n, G, 1.2, 0.7)
 			if merge:
 				closest_node.update(n)
 				if prevNode and not G.has_path(prevNode, closest_node, 5):
