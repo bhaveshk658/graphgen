@@ -72,18 +72,11 @@ def clean(traces, length_threshold, dist_threshold):
 
 	return trips
 
-def compute_average(traces):
+def gravity(traces):
 	"""
-	Given a list of traces, computes the average trace.
+	Given a list of traces, perform Cao & Krumm preprocessing.
 	"""
-	traces.sort(key=len)
-	new_len = len(traces[-1])
-	
-	# Interpolate each curve and replace
-	equalized_traces = []
-	for trace in traces:
-		trace = np.array(trace)
-		f = interp1d(trace[:, 0], trace[:, 1])
+	return
 		
 
 		

@@ -19,17 +19,22 @@ for trip in trips:
         trip[i] = node
 
 
+
 plt.xlim(960, 1015)
 plt.ylim(980, 1040)
+
+
 
 rl = [16]
 rl_trips = [trips[i] for i in rl]
 rl_graph = convert_to_graph(rl_trips)
+rl_graph.draw()
 rl_nodes = rl_graph.get_lane_nodes()
 
 rb = [0, 1, 8, 11, 14, 15, 18, 19, 21, 24]
 rb_trips = [trips[i] for i in rb]
 rb_graph = convert_to_graph(rb_trips)
+rb_graph.draw()
 rb_nodes = rb_graph.get_lane_nodes()
 
 br = [6, 12, 13, 20, 22, 25, 26, 27]
@@ -42,7 +47,7 @@ tr_trips = [trips[i] for i in tr]
 tr_graph = convert_to_graph(tr_trips)
 tr_nodes = tr_graph.get_lane_nodes()
 
-rt = [3, 17]
+rt = [3]
 rt_trips = [trips[i] for i in rt]
 rt_graph = convert_to_graph(rt_trips)
 rt_nodes = rt_graph.get_lane_nodes()
@@ -57,18 +62,20 @@ bt_trips = [trips[i] for i in bt]
 bt_graph = convert_to_graph(bt_trips)
 bt_nodes = bt_graph.get_lane_nodes()
 
-wrong = [5, 28, 29]
 
-lanes = [rl_nodes, rb_nodes, br_nodes, tr_nodes, rt_nodes, special_nodes, bt_nodes]
+
+lanes = [rb_nodes, rl_nodes, br_nodes, tr_nodes, rt_nodes, special_nodes, bt_nodes]
 
 G = convert_to_graph(lanes)
 G.draw()
 
+wrong = [5, 17, 28, 29]
+"""
 for i in range(len(trips)):
     if i in wrong:
         continue
-    for point in traces[i]:
-        plt.scatter(point[0], point[1], c='r', alpha=0.1)
-
+    for point in trips[i]:
+        plt.scatter(point.x, point.y, c='r', alpha=0.2)
+"""
 plt.show()
 
