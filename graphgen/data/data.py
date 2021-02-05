@@ -76,6 +76,9 @@ def gravity(traces):
 	"""
 	Given a list of traces, perform Cao & Krumm preprocessing.
 	"""
+	points = np.array([item for sublist in traces for item in sublist])
+	orig = np.copy(points)
+	
 	return traces
 		
 
