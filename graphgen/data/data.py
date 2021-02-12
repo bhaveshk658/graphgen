@@ -2,8 +2,11 @@ import os
 from pandas import read_csv
 import numpy as np
 from scipy.interpolate import interp1d
+from sklearn.neighbors import KDTree
+import matplotlib.pyplot as plt
 
-from graphgen.data.utils import dist
+from graphgen.data.utils import *
+from graphgen.graph import Node
 
 def get_training_data(n, location, box=None):
 	"""
@@ -76,10 +79,76 @@ def gravity(traces):
 	"""
 	Given a list of traces, perform Cao & Krumm preprocessing.
 	"""
+	lengths = [len(trace) for trace in traces]
+	# Flatten to list of points, keep copy of original positions
 	points = np.array([item for sublist in traces for item in sublist])
-	orig = np.copy(points)
+	headings = points[:, 2]
+	points = points[:, :2]
+	original = np.copy(points)
+
+	tree = KDTree(points, leaf_size=2)
 	
-	return traces
+	# Number of iterations
+	for _ in range(20):
+		# Skip first and last points
+		for i in range(1, len(points) - 1):
+			a = points[i]
+			orig = original[i]
+
+
+			# Get perpendicular heading
+			prev = points[i-1]
+			next = points[i+1]
+			heading = next - prev
+			d = np.array(heading[1], -heading[0])
+			
+			# Query for nearby points
+			ind = tree.query_radius(np.array([a]), r=3)
+
+			# Identify all edges by finding consecutive nearby points
+			pairs = []
+			for j in range(len(ind[0])):
+				for k in range(j+1, len(ind[0])):
+					if ind[0][j]+1 == ind[0][k]:
+						pairs.append((ind[0][j], ind[0][k]))
+
+			# Iterate through all edges
+			for pair in pairs:
+				b = points[pair[0]]
+				c = points[pair[1]]
+				seg_heading = c - b
+				midpoint = (c-b)/2
+				
+				# If edge intersects perpendicular line from point, proceed
+				if line_line_segment_intersect(a, d, b, c):
+					t1_distance = minDistance(b, c, a)
+					t1_direction = direction(a, midpoint)
+					t1 = np.array(t1_force(t1_distance) * t1_direction)
+
+					if all(a == orig):
+						t2 = 0
+					else:
+						t2_direction = direction(a, orig)
+						t2 = t2_force(a, orig) * t2_direction
+
+					resultant = t1 + t2
+
+					a += (100*resultant)
+
+			points[i] = a
+
+	new_traces = []
+	for l in lengths:
+		trace = []
+		temp = points[:l]
+		temp_headings = headings[:l]
+		for i in range(len(temp)):
+			h = temp_headings[i]
+			trace.append([temp[i][0], temp[i][1], h])
+		new_traces.append(trace)
+		points = points[l:]
+		headings = headings[l:]
+	return new_traces
 		
 
 		

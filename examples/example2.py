@@ -64,16 +64,16 @@ bt_nodes = bt_graph.get_lane_nodes()
 
 lanes = [rl_nodes, rb_nodes, br_nodes, tr_nodes, rt_nodes, special_nodes, bt_nodes]
 
-G = convert_to_graph(lanes)
+G = convert_to_graph(lanes, dist_limit=2, heading_limit=0.2)
 G.draw()
 
 wrong = [5, 17, 28, 29]
-"""
+
 for i in range(len(trips)):
     if i in wrong:
         continue
     for point in trips[i]:
         plt.scatter(point.x, point.y, c='r', alpha=0.2)
-"""
+
 plt.show()
 

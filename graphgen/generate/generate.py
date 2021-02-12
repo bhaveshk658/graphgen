@@ -3,11 +3,11 @@ from graphgen.graph.graph import Graph
 from graphgen.graph.node import Node
 
 def to_merge(candidate, G, dist_limit, heading_limit):
-	'''
+	"""
 	Determines if a candidate node should be merged into the graph.
 	Returns whether or not to merge, the target edge,
 	the closest node, and the distance.
-	'''
+	"""
 	if len(G.edges()) == 0:
 		return False, None
 
@@ -29,7 +29,7 @@ def to_merge(candidate, G, dist_limit, heading_limit):
 
 	return False, None
 
-def convert_to_graph(trips):
+def convert_to_graph(trips, dist_limit=3, heading_limit=0.7):
 	"""
 	Converts a set of trips into a directed graph.
 	"""
@@ -37,7 +37,7 @@ def convert_to_graph(trips):
 	for t in trips:
 		prevNode = None
 		for n in t:
-			merge, closest_node = to_merge(n, G, 1.2, 0.7)
+			merge, closest_node = to_merge(n, G, dist_limit, heading_limit)
 			if merge:
 				closest_node.update(n)
 				if prevNode and not G.has_path(prevNode, closest_node, 5):

@@ -24,11 +24,12 @@ for trace in rb_traces:
 
 # Gravity preprocessing then plot again
 new_rb_traces = gravity(rb_traces)
+
 plt.figure(1)
 plt.xlim(960, 1015)
 plt.ylim(980, 1040)
 for trace in new_rb_traces:
     for point in trace:
-        plt.scatter(point[0], point[1], c='r', alpha=0.5)
+        plt.scatter(point[0], point[1], c='b', alpha=0.5)
 
 plt.show()
