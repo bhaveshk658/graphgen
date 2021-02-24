@@ -18,75 +18,62 @@ for trip in trips:
         node = graphgen.graph.node.Node(point[0], point[1], point[2])
         trip[i] = node
 
-"""
-for node in trips[16]:
-    plt.scatter(node.x, node.y, c='g', alpha=0.5)
-for node in trips[5]:
-    plt.scatter(node.x, node.y, c='r', alpha=0.5)
-for node in trips[28]:
-    plt.scatter(node.x, node.y, c='b', alpha=0.5)
-for node in trips[29]:
-    plt.scatter(node.x, node.y, c='k', alpha=0.5)
-"""
-
-
 
 
 plt.xlim(960, 1015)
 plt.ylim(980, 1040)
 
+
+
 rl = [16]
 rl_trips = [trips[i] for i in rl]
 rl_graph = convert_to_graph(rl_trips)
+rl_nodes = rl_graph.get_lane_nodes()
 
 rb = [0, 1, 8, 11, 14, 15, 18, 19, 21, 24]
 rb_trips = [trips[i] for i in rb]
 rb_graph = convert_to_graph(rb_trips)
+rb_nodes = rb_graph.get_lane_nodes()
 
 br = [6, 12, 13, 20, 22, 25, 26, 27]
 br_trips = [trips[i] for i in br]
 br_graph = convert_to_graph(br_trips)
+br_nodes = br_graph.get_lane_nodes()
 
 tr = [2, 7, 10]
 tr_trips = [trips[i] for i in tr]
 tr_graph = convert_to_graph(tr_trips)
+tr_nodes = tr_graph.get_lane_nodes()
 
-rt = [3, 17]
+rt = [3]
 rt_trips = [trips[i] for i in rt]
 rt_graph = convert_to_graph(rt_trips)
+rt_nodes = rt_graph.get_lane_nodes()
 
 special = [4]
 special_trips = [trips[i] for i in special]
 special_graph = convert_to_graph(special_trips)
+special_nodes = special_graph.get_lane_nodes()
 
 bt = [9, 23]
 bt_trips = [trips[i] for i in bt]
 bt_graph = convert_to_graph(bt_trips)
+bt_nodes = bt_graph.get_lane_nodes()
 
-wrong = [5, 28, 29]
 
-G = Graph()
-#G.update(rl_graph)
-#G.update(rb_graph)
-tr_graph.draw()
-bt_graph.draw()
-G.update(tr_graph)
-#G.update(br_graph)
-#G.update(rt_graph)
-#G.update(special_graph)
-G.update(bt_graph)
-#G.cleanup()
-"""
+
+lanes = [rl_nodes, rb_nodes, br_nodes, tr_nodes, rt_nodes, special_nodes, bt_nodes]
+
+G = convert_to_graph(lanes, dist_limit=2, heading_limit=0.2)
+G.draw()
+
+wrong = [5, 17, 28, 29]
+
 for i in range(len(trips)):
     if i in wrong:
         continue
-    trip = trips[i]
-    for node in trip:
-        plt.scatter(node.x, node.y, c='g', alpha=0.2)
-
-
-"""
-
+    for point in trips[i]:
+        plt.scatter(point.x, point.y, c='r', alpha=0.2)
 
 plt.show()
 

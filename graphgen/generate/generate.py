@@ -49,17 +49,3 @@ def convert_to_graph(trips, dist_limit=3, heading_limit=0.7):
 					G.add_edge(prevNode, n)
 				prevNode = n
 	return G
-
-
-def to_merge_new(candidate, G, merge_threshold):
-	# If G is empty, return False
-	if len(G.edges()) == 0:
-		return False
-
-	edges = G.edges()
-
-	return
-
-
-def convert_to_graph_new():
-	return Graph()
