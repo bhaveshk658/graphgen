@@ -4,6 +4,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 from sklearn.neighbors import KDTree
 import matplotlib.pyplot as plt
+import time
+import random
 
 from graphgen.data.utils import *
 from graphgen.graph import Node
@@ -19,7 +21,6 @@ def get_training_data(n, location, box=None):
 	for i in range(n):
 		path = os.path.join(location, "vehicle_tracks_00"+str(i)+".csv")
 		data = read_csv(path)
-		print(data.size)
 
 		# Define rectangle of area to take points from.
 		if box:
@@ -88,13 +89,13 @@ def gravity(traces):
 	original = np.copy(points)
 
 
-	# Check KDTree timing
 	tree = KDTree(points, leaf_size=2)
 	
+	rand_index = random.randrange(1, len(points)-1, 1)
 	# Number of iterations
-	for _ in range(20):
-		min_dist = float('inf')
-		max_dist = -float('inf')
+	for _ in range(1):
+
+		resultants = [0]*len(points)
 		# Skip first and last points
 		for i in range(1, len(points) - 1):
 			a = points[i]
@@ -105,47 +106,76 @@ def gravity(traces):
 			prev = points[i-1]
 			next = points[i+1]
 			heading = next - prev
-			d = np.array(heading[1], -heading[0])
+			d = [heading[1], -heading[0]]
 			
 			# Query for nearby points
-			ind = tree.query_radius(np.array([a]), r=3)
+			ind = tree.query_radius(np.array([a]), r=2)
+			ind[0].sort()
 
 			# Identify all edges by finding consecutive nearby points
 			# Check for incomplete edges, pair not coming from same trace?
 			pairs = []
-			for j in range(len(ind[0])):
-				for k in range(j+1, len(ind[0])):
-					if ind[0][j]+1 == ind[0][k]:
-						pairs.append((ind[0][j], ind[0][k]))
+			for j in range(1, len(ind[0])):
+				if ind[0][j] == ind[0][j-1] + 1:
+					pairs.append((ind[0][j-1], ind[0][j]))
+			
+			# Debugging
+			
+			if (i == rand_index):
+				plt.scatter(a[0], a[1], c='b') # Point
+				plt.scatter(points[i-1][0], points[i-1][1], c='b') # Point before
+				plt.scatter(points[i+1][0], points[i+1][1], c='b') # Point after
+				plt.scatter(a[0] + d[0], a[1] + d[1], c='k') # Heading
+				plt.scatter(a[0]-d[0], a[1]-d[1], c='k') # Heading
+			
 
-			# Iterate through all edges
+			# Iterate through all edges, identifying intersecting ones
+			intersecting_pairs = []
 			for pair in pairs:
 				b = points[pair[0]]
 				c = points[pair[1]]
-				seg_heading = c - b
 				midpoint = (c+b)/2
 				# If edge intersects perpendicular line from point, proceed
 				if line_line_segment_intersect(a, d, b, c):
-					t1_distance = dist(a, midpoint)
-					t1_direction = direction(a, midpoint)
-					t1 = np.array(t1_force(t1_distance) * t1_direction)
+					intersecting_pairs.append(pair)
+
+			# Iterate through intersecting edges
+			for pair in intersecting_pairs:
+				b = points[pair[0]]
+				c = points[pair[1]]
+				
+				if i == rand_index:
+					plt.scatter(b[0], b[1], c='g', alpha=0.4)
+					plt.scatter(c[0], c[1], c='g', alpha=0.4)
+				
+				midpoint = (c+b)/2
+				t1_distance = dist(a, midpoint)
+				t1_direction = direction(a, midpoint)
+				t1 = np.array(t1_force(t1_distance) * t1_direction)
 
 
-					if all(a == orig):
-						t2 = 0
-					else:
-						t2_direction = direction(a, orig)
-						t2 = t2_force(a, orig) * t2_direction
+				if all(a == orig):
+					t2 = 0
+				else:
+					t2_direction = direction(a, orig)
+					t2 = t2_force(a, orig) * t2_direction
 
-					resultant = t1 + t2
-					a += (resultant)
+				resultant = t1 + t2
+				if i == rand_index:
+					a += (resultant)#3.7 is the number
+				resultants[i] += pow(resultant[0]**2 + resultant[1]**2, 0.5)
 
-			check_dist = dist(a, orig)
-			min_dist = min(min_dist, check_dist)
-			max_dist = max(max_dist, check_dist)
+			if i == rand_index:
+				plt.scatter(a[0], a[1], c='y')
+			
 			points[i] = a
 			# Update kd tree
-		print(min_dist, max_dist)
+			tree = KDTree(points, leaf_size=2)
+		print(len(resultants), len(points))
+		print("Max resultant: "+str(max(resultants)))
+		print("Min resultant: "+str(min(resultants)))
+		print("Avg resultant: "+str(sum(resultants)/len(resultants)))
+
 
 	new_traces = []
 	for l in lengths:
