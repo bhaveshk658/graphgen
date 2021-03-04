@@ -79,8 +79,11 @@ def gravity(traces):
 
 	rand_index= random.randrange(1, len(points)-1, 1)
 	# Number of iterations
-	num_iter = 1
-	for k in range(num_iter):
+	k = 0
+	resultant_threshold = 0.1
+	repeat = True
+	while repeat:
+		k += 1
 		print("Starting iteration " + str(k))
 
 		# Initialize resultants array
@@ -181,7 +184,10 @@ def gravity(traces):
 
 		# Get max mag of resultants
 		max_res = max(resultants, key=lambda v: pow(v[0]**2+ v[1]**2, 0.5))
-		print("Max resultant: " + str(pow(max_res[0]**2 + max_res[1]**2, 0.5)))
+		max_res_mag = pow(max_res[0]**2 + max_res[1]**2, 0.5)
+		print("Max resultant: " + str(max_res_mag))
+		if max_res_mag < 0.1:
+			repeat = False
 
 
 	# Recreate traces using stored lengths
