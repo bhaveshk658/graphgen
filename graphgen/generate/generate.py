@@ -17,7 +17,7 @@ def to_merge(candidate, G, dist_limit, heading_limit):
 	for edge in edges:
 		temp_dist = dist_point_to_line(edge[0], edge[1], candidate)
 		temp_heading = abs(candidate.heading - edge[0].heading)
-		
+
 		# Check merge parameters.
 		if temp_dist < dist_limit and temp_heading < heading_limit:
 			d1 = distance(edge[0].x, edge[0].y, candidate.x, candidate.y)

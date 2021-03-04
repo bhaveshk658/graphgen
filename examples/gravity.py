@@ -11,7 +11,6 @@ path = "/Users/bkalisetti658/desktop/graphgen/data/InteractionDR1.0/recorded_tra
 # Get data within a certain box
 print("Fetching data...")
 traces = get_training_data(1, path, xmin=960, xmax=1015, ymin=980, ymax=1040)
-print(type(traces), type(traces[0]), type(traces[0][0]))
 
 print("Cleaning data...")
 traces = clean(traces, length_threshold=50, dist_threshold=1)
@@ -36,12 +35,11 @@ processed_rb_traces = gravity(rb_traces)
 
 
 print("Plotting preprocessed points...")
-plt.figure(2)
+plt.figure(3)
 plt.xlim(960, 1015)
 plt.ylim(980, 1040)
 for trace in processed_rb_traces:
     for point in trace:
         plt.scatter(point[0], point[1], c='r', alpha=0.2)
-
 
 plt.show()

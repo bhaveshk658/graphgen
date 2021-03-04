@@ -1,6 +1,7 @@
 import os
 import time
 import random
+from math import cos
 
 from pandas import read_csv
 import numpy as np
@@ -35,24 +36,8 @@ def get_training_data(n, location, box=None, xmin=MIN_NUM, xmax=MAX_NUM, ymin=MI
 			temp = data.loc[(data['track_id'] == i)]
 			temp = temp.to_numpy()
 			if len(temp != 0):
-				temp = np.vstack((temp[:, 4], temp[:, 5], temp[:, 6], temp[:, 7])).T
+				temp = np.vstack((temp[:, 4], temp[:, 5])).T
 				traces.append(temp)
-
-		# Get headings using velocity vector at each point.
-		for i in range(len(traces)):
-			for j in range(len(traces[i])):
-				velocity = traces[i][j][2:]
-				length = np.linalg.norm(velocity)
-				if (length == 0):
-					heading = 0
-				else:
-					x = velocity/length
-					heading = np.arccos(np.dot(x, [1, 0]))
-				traces[i][j][3] = heading
-
-		# Keep traces as x, y, heading.
-		for i in range(len(traces)):
-			traces[i] = np.delete(traces[i], 2, axis=1)
 
 	return np.array(traces, dtype="object")
 
@@ -74,7 +59,7 @@ def clean(traces, length_threshold, dist_threshold):
 			# If the point is less than dist_threshold unit away, skip it.
 			if array_dist(point, trace[i]) < dist_threshold:
 				continue
-			cleaned_trace.append([trace[i][0], trace[i][1], trace[i][2]])
+			cleaned_trace.append([trace[i][0], trace[i][1]])
 			point = trace[i]
 		cleaned_traces.append(cleaned_trace)
 
@@ -87,16 +72,16 @@ def gravity(traces):
 	lengths = [len(trace) for trace in traces]
 	# Flatten to list of points, keep copy of original positions
 	points = np.array([item for sublist in traces for item in sublist])
-	headings = points[:, 2]
-	points = points[:, :2]
 	original = np.copy(points)
 
 
 	tree = KDTree(points, leaf_size=2)
 
-	rand_index = random.randrange(1, len(points)-1, 1)
+	rand_index= random.randrange(1, len(points)-1, 1)
 	# Number of iterations
-	for k in range(5):
+	num_iter = 1
+	for k in range(num_iter):
+		print("Starting iteration " + str(k))
 
 		# Initialize resultants array
 		resultants = [[0, 0]]*len(points)
@@ -124,7 +109,9 @@ def gravity(traces):
 
 			# Debugging
 			"""
-			if (i == rand_index):
+			if (i == rand_index and k == num_iter-1):
+				plt.figure(3)
+				plt.scatter(orig[0], orig[1], c='m') # Original location
 				plt.scatter(a[0], a[1], c='b') # Point
 				plt.scatter(points[i-1][0], points[i-1][1], c='b') # Point before
 				plt.scatter(points[i+1][0], points[i+1][1], c='b') # Point after
@@ -148,7 +135,8 @@ def gravity(traces):
 				c = points[pair[1]]
 
 				"""
-				if i == rand_index:
+				if i == rand_index and k == num_iter-1:
+					plt.figure(3)
 					plt.scatter(b[0], b[1], c='g', alpha=0.4)
 					plt.scatter(c[0], c[1], c='g', alpha=0.4)
 				"""
@@ -158,6 +146,10 @@ def gravity(traces):
 				t1_distance = array_dist(a, midpoint)
 				t1_direction = direction(a, midpoint)
 				t1 = np.array(t1_force(t1_distance) * t1_direction)
+
+				# Multiply t1 force by cosine of angle between edge and heading of point
+				angle = theta(np.array(heading), np.array([c[0]-b[0], c[1]-b[1]]))
+				t1 *= cos(angle)
 
 
 				# Compute type 2 force (spring)
@@ -169,51 +161,36 @@ def gravity(traces):
 
 				resultant = t1 + t2
 
-				#if i == rand_index:
-				a += (4*resultant)#3.7 is the number
-
 				res_mag = pow(resultant[0]**2 + resultant[1]**2, 0.5)
-				unit_rest= resultant / res_mag
+				unit_res = resultant / res_mag
 				resultants[i] += resultant
 
 			"""
-			if i == rand_index:
-				plt.scatter(a[0], a[1], c='y')
+			if i == rand_index and k == num_iter-1:
+				plt.figure(3)
+				plt.scatter(a[0] + resultants[i][0], a[1] + resultants[i][1], c='y')
 			"""
 
-			points[i] = a
-			# Update kd tree
-			tree = KDTree(points, leaf_size=2)
+		# Move all points
+		for i in range(len(points)):
+			points[i] += resultants[i]
 
-		"""
+		# Recreate k-d tree with new points
+		tree = KDTree(points, leaf_size=2)
+
+
 		# Get max mag of resultants
 		max_res = max(resultants, key=lambda v: pow(v[0]**2+ v[1]**2, 0.5))
 		print("Max resultant: " + str(pow(max_res[0]**2 + max_res[1]**2, 0.5)))
 
-		# Shift all points by resultants
-		for i in range(len(points)):
-			points[i] += resultants[i]
 
-		# Plot points
-		plt.figure(k+2)
-		plt.xlim(960, 1015)
-		plt.ylim(980, 1040)
-		for point in points:
-			plt.scatter(point[0], point[1], c='r', alpha=0.2)
-
-		# Update KD tree
-		tree= KDTree(points, leaf_size=2)
-		"""
-
+	# Recreate traces using stored lengths
 	new_traces = []
 	for l in lengths:
 		trace = []
 		temp = points[:l]
-		temp_headings = headings[:l]
 		for i in range(len(temp)):
-			h = temp_headings[i]
-			trace.append([temp[i][0], temp[i][1], h])
+			trace.append([temp[i][0], temp[i][1]])
 		new_traces.append(trace)
 		points = points[l:]
-		headings = headings[l:]
 	return new_traces

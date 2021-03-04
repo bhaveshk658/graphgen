@@ -21,6 +21,18 @@ def direction(p1, p2):
     p2 = np.array(p2)
     return (p2-p1)/distance(p1[0], p1[1], p2[0], p2[1])
 
+def theta(v1, v2):
+    """
+    Computes angle between two vectors
+    """
+    return np.arccos(v1.dot(v2)/(np.linalg.norm(v1)*np.linalg.norm(v2)))
+
+def proj(v1, v2):
+    """
+    Computes projection of v1 onto v2
+    """
+    return np.dot(v1, v2)/np.linalg.norm(v2)
+
 def t1_force(t):
     M = 10
     N = 1
@@ -31,7 +43,7 @@ def t1_force(t):
     return ((M*N)/(sqrt(2*pi*sig_square))) * ((2*t*exp((-t**2)/(2*sig_square)))/(2*sig_square))
 
 def t2_force(p, orig):
-    return 0.5*array_dist(p, orig)
+    return 0.05*array_dist(p, orig)
 
 def ccw(A, B, C):
     """
