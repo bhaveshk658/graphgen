@@ -76,4 +76,3 @@ for i in range(len(trips)):
         plt.scatter(point.x, point.y, c='r', alpha=0.2)
 
 plt.show()
-
