@@ -17,8 +17,6 @@ def direction(p1, p2):
     """
     Direction between two points p1 and p2.
     """
-    p1 = np.array(p1)
-    p2 = np.array(p2)
     return (p2-p1)/distance(p1[0], p1[1], p2[0], p2[1])
 
 def theta(v1, v2):
@@ -62,13 +60,9 @@ def line_line_segment_intersect(p, d, p1, p2):
     Check if a line defined by point p and direction d intersects
     a segment p1p2.
     """
-    p = np.array(p)
-    p1 = np.array(p1)
-    p2 = np.array(p2)
-    d = np.array(d)
 
-    extend1 = p + 500*d
-    extend2 = p - 500*d
+    extend1 = [p[0] + 500000*d[0], p[1] + 500000*d[1]]
+    extend2 = [p[0] - 500000*d[0], p[1] - 500000*d[1]]
 
     return is_intersect(p, extend1, p1, p2) or is_intersect(p, extend2, p1, p2)
 
@@ -76,9 +70,6 @@ def minDistance(A, B, E) :
     """
     Minimum distance from a point E to line segment AB. Adapted from GeeksforGeeks.
     """
-    A = np.array(A)
-    B = np.array(B)
-    E = np.array(E)
 
     # vector AB
     AB = [None, None]

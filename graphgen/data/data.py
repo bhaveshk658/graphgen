@@ -61,9 +61,9 @@ def clean(traces, length_threshold, dist_threshold):
 				continue
 			cleaned_trace.append([trace[i][0], trace[i][1]])
 			point = trace[i]
-		cleaned_traces.append(cleaned_trace)
+		cleaned_traces.append(np.array(cleaned_trace))
 
-	return cleaned_traces
+	return np.array(cleaned_traces, dtype="object")
 
 def gravity(traces):
 	"""
@@ -74,7 +74,6 @@ def gravity(traces):
 	points = np.array([item for sublist in traces for item in sublist])
 	original = np.copy(points)
 
-
 	tree = KDTree(points, leaf_size=2)
 
 	rand_index= random.randrange(1, len(points)-1, 1)
@@ -82,9 +81,11 @@ def gravity(traces):
 	k = 0
 	resultant_threshold = 0.1
 	repeat = True
+	print("Iteration will stop when resultant is less than " + str(resultant_threshold))
+	print("Processing " + str(len(points)) + " points (" + str(len(traces)) + ") traces")
 	while repeat:
 		k += 1
-		print("Starting iteration " + str(k))
+		print("Starting iteration " + str(k) + "...")
 
 		# Initialize resultants array
 		resultants = [[0, 0]]*len(points)
