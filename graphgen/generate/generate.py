@@ -29,7 +29,7 @@ def to_merge(candidate, G, dist_limit, heading_limit):
 
 	return False, None
 
-def convert_to_graph(trips, dist_limit=3, heading_limit=0.7):
+def convert_to_graph(trips, dist_limit=3, heading_limit=0.78):
 	"""
 	Converts a set of trips into a directed graph.
 	"""

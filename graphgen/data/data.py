@@ -1,7 +1,7 @@
 import os
 import time
 import random
-from math import cos
+from math import cos, atan2, sqrt, pi
 
 from pandas import read_csv
 import numpy as np
@@ -83,7 +83,7 @@ def gravity(traces):
 	repeat = True
 	print("Iteration will stop when resultant is less than " + str(resultant_threshold))
 	print("Processing " + str(len(points)) + " points (" + str(len(traces)) + ") traces")
-	while repeat:
+	while repeat and k <= 20:
 		k += 1
 		print("Starting iteration " + str(k) + "...")
 
@@ -101,7 +101,10 @@ def gravity(traces):
 			d = [heading[1], -heading[0]]
 
 			# Query for nearby points
-			ind = tree.query_radius(np.array([a]), r=2)
+			try:
+				ind = tree.query_radius(np.array([a]), r=2)
+			except ValueError:
+				continue
 			ind[0].sort()
 
 			# Identify all edges by finding consecutive nearby points
@@ -110,18 +113,6 @@ def gravity(traces):
 			for j in range(1, len(ind[0])):
 				if ind[0][j] == ind[0][j-1] + 1:
 					pairs.append((ind[0][j-1], ind[0][j]))
-
-			# Debugging
-			"""
-			if (i == rand_index and k == num_iter-1):
-				plt.figure(3)
-				plt.scatter(orig[0], orig[1], c='m') # Original location
-				plt.scatter(a[0], a[1], c='b') # Point
-				plt.scatter(points[i-1][0], points[i-1][1], c='b') # Point before
-				plt.scatter(points[i+1][0], points[i+1][1], c='b') # Point after
-				plt.scatter(a[0] + d[0], a[1] + d[1], c='k') # Heading
-				plt.scatter(a[0]-d[0], a[1]-d[1], c='k') # Heading
-			"""
 
 			# Iterate through all edges, identifying intersecting ones
 			intersecting_pairs = []
@@ -137,13 +128,6 @@ def gravity(traces):
 			for pair in intersecting_pairs:
 				b = points[pair[0]]
 				c = points[pair[1]]
-
-				"""
-				if i == rand_index and k == num_iter-1:
-					plt.figure(3)
-					plt.scatter(b[0], b[1], c='g', alpha=0.4)
-					plt.scatter(c[0], c[1], c='g', alpha=0.4)
-				"""
 
 				# Compute type 1 force (gravitational)
 				midpoint = (c+b)/2
@@ -169,12 +153,6 @@ def gravity(traces):
 				unit_res = resultant / res_mag
 				resultants[i] += resultant
 
-			"""
-			if i == rand_index and k == num_iter-1:
-				plt.figure(3)
-				plt.scatter(a[0] + resultants[i][0], a[1] + resultants[i][1], c='y')
-			"""
-
 		# Move all points
 		for i in range(len(points)):
 			points[i] += resultants[i]
@@ -197,7 +175,45 @@ def gravity(traces):
 		trace = []
 		temp = points[:l]
 		for i in range(len(temp)):
-			trace.append([temp[i][0], temp[i][1]])
-		new_traces.append(trace)
+			trace.append(np.array([temp[i][0], temp[i][1]]))
+		new_traces.append(np.array(trace, dtype='object'))
 		points = points[l:]
-	return new_traces
+	return np.array(new_traces, dtype='object')
+
+
+def compute_headings(traces):
+	"""
+	Given a list of traces, compute the heading of each point and append.
+	"""
+	headings = []
+	for trace in traces:
+	    trace_headings = []
+
+	    dir_vector = direction(trace[0], trace[1])
+	    angle = atan2(dir_vector[1], dir_vector[0])
+	    if angle < 0:
+	        angle += 2*pi
+	    trace_headings.append(angle)
+
+	    for i in range(1, len(trace) - 1):
+	        prev = trace[i-1]
+	        next = trace[i+1]
+	        dir_vector = direction(np.array([prev[0], prev[1]]), np.array([next[0], next[1]]))
+	        angle = atan2(dir_vector[1], dir_vector[0])
+	        if angle < 0:
+	            angle += 2*pi
+	        trace_headings.append(angle)
+
+	    dir_vector = direction(trace[-2], trace[-1])
+	    angle = atan2(dir_vector[1], dir_vector[0])
+	    if angle < 0:
+	        angle += 2*pi
+	    trace_headings.append(angle)
+
+
+	    headings.append(np.array([trace_headings]))
+
+	for i in range(len(traces)):
+	    traces[i] = np.concatenate((traces[i], headings[i].T), axis=1)
+
+	return traces
