@@ -1,6 +1,9 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import lanelet2 as llt
 from lanelet2.core import BasicPoint2d
+
+from graphgen.data.llt_data_utils import *
 
 def coordinate_to_id(llt_map, x, y):
 	"""
@@ -17,3 +20,18 @@ def coordinate_to_id(llt_map, x, y):
 	id_dict = {llt.id: index for (index, llt) in enumerate(llt_map.laneletLayer)}
 	all_lanelets = [id_dict[int(x)] for x in np.unique(all_lanelets)]               # gets all unique lanelets
 	return all_lanelets
+
+
+def draw_map(path):
+    """
+    Draws physical map of .osm file provided by path.
+    """
+    fig, axes = plt.subplots(1, 1)
+    fig.canvas.set_window_title("Visualization")
+
+    lat_origin = 0.
+    long_origin = 0.
+
+    projector = llt.projection.UtmProjector(llt.io.Origin(lat_origin, long_origin))
+    laneletmap = llt.io.load(path, projector)
+    draw_lanelet_map(laneletmap, axes)

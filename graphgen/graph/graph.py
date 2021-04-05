@@ -92,7 +92,7 @@ class Graph:
                 if (node, neighbor) not in edges:
                     edges.append((node, neighbor))
         return edges
-    
+
     def add_node(self, node):
         """
         Add a node to the graph
@@ -101,7 +101,7 @@ class Graph:
             self.mapping[node] = []
             self.nodes.append(node)
             self.points.append([node.x, node.y, node.heading])
-    
+
     def add_edge(self, start, end):
         """
         Add an edge to the graph.
@@ -139,14 +139,14 @@ class Graph:
                     visited.add(neighbor)
 
         return False
-        
+
 
     def draw(self):
         """
         Scatter plot the graph.
         """
         for node in self.mapping:
-            plt.scatter(node.x, node.y, c='b')
+            plt.scatter(node.x, node.y, c='b', s=10)
 
         for node in self.mapping:
             for target in self.mapping[node]:
@@ -210,7 +210,7 @@ class Graph:
             d, edge = self.get_nearest_edge(point)
             heading_diff = abs(point.heading - edge[0].heading)
             if d < 0 and heading_diff < 0.2:
-                
+
                 node_edge_map[point] = edge
             point = next
             i += 1
@@ -244,18 +244,18 @@ class Graph:
             node = G_nodes[y_start]
             plt.scatter(node.x, node.y, c='g')
             y_start += 1
-        
+
         while x_start <= x_end:
             node = self_nodes[x_start]
             plt.scatter(node.x, node.y, c='g')
             x_start += 1
-        
+
         while y_start <= y_end:
             node = G_nodes[y_start]
             plt.scatter(node.x, node.y, c='g')
             y_start += 1
 
-        
+
 
     def get_kd(self):
         """
@@ -319,7 +319,7 @@ class Graph:
                     self.mapping[prev].remove(node2)
                     self.mapping[prev].append(node1)
                     break
-        
+
 
     def cleanup(self):
         """
@@ -351,7 +351,7 @@ class Graph:
         """
         self_points = np.array(self.get_lane_points())
         G_points = np.array(G.get_lane_points())
-        
+
         _, path = fastdtw(self_points, G_points)
 
         x_ind = []
@@ -362,7 +362,7 @@ class Graph:
             if distance(x[0], x[1], y[0], y[1]) < 1.75:
                 x_ind.append(pair[0])
                 y_ind.append(pair[1])
-        
+
         x_start = min(x_ind)
         x_end = max(x_ind)
 
@@ -378,8 +378,3 @@ class Graph:
         """
 
         return x_start, x_end, y_start, y_end
-        
-
-
-
-    
