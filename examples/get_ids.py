@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 import lanelet2 as llt
+from lanelet2.core import Point3d, LineString3d, Lanelet
 from lanelet2.projection import UtmProjector
 
 from graphgen.data import coordinate_to_id, draw_map, gravity, compute_headings
@@ -66,5 +67,16 @@ for group in groups:
 G = convert_to_graph(final_nodes, dist_limit=2, heading_limit=0.72)
 G.draw()
 
-
 plt.savefig("graph.png")
+
+edges = G.edges()
+for i in range(len(edges)):
+    p1 = edges[i][0]
+    p2 = edges[i][1]
+
+    id1 = random.randint(5000, 100000)
+
+    linestring = LineString3d(-i, [Point3d(id1, p1.x, p1.y, 0), Point3d(id1+1, p2.x, p2. y, 0)])
+    lanelet = Lanelet(i, linestring, linestring)
+    mapLoad.add(lanelet)
+llt.io.write("new.osm", mapLoad, projector)
