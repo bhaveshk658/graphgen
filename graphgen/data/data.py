@@ -83,7 +83,7 @@ def gravity(traces):
 	repeat = True
 	print("Iteration will stop when resultant is less than " + str(resultant_threshold))
 	print("Processing " + str(len(points)) + " points (" + str(len(traces)) + ") traces")
-	while repeat and k <= 20:
+	while repeat and k <= 10:
 		k += 1
 		print("Starting iteration " + str(k) + "...")
 

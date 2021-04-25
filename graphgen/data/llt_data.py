@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import lanelet2 as llt
-from lanelet2.core import BasicPoint2d
+#import lanelet2 as llt
+#from lanelet2.core import BasicPoint2d
 
 from graphgen.data.llt_data_utils import *
 
