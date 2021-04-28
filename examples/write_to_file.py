@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from graphgen.data import get_training_data, clean, gravity#, compute_headings
 

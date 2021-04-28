@@ -79,11 +79,11 @@ def gravity(traces):
 	rand_index= random.randrange(1, len(points)-1, 1)
 	# Number of iterations
 	k = 0
-	resultant_threshold = 0.1
+	resultant_threshold = 0.15
 	repeat = True
 	print("Iteration will stop when resultant is less than " + str(resultant_threshold))
 	print("Processing " + str(len(points)) + " points (" + str(len(traces)) + ") traces")
-	while repeat and k <= 10:
+	while repeat and k <= 20:
 		k += 1
 		print("Starting iteration " + str(k) + "...")
 
@@ -138,6 +138,8 @@ def gravity(traces):
 				# Multiply t1 force by cosine of angle between edge and heading of point
 				angle = theta(np.array(heading), np.array([c[0]-b[0], c[1]-b[1]]))
 				t1 *= cos(angle)
+				if cos(angle) < 0 and not ccw(b, c, a):
+					t1 = np.array([0.0, 0.0])
 
 
 				# Compute type 2 force (spring)
@@ -146,11 +148,12 @@ def gravity(traces):
 				else:
 					t2_direction = direction(a, orig)
 					t2 = t2_force(a, orig) * t2_direction
-
+				
 				resultant = t1 + t2
 
 				res_mag = pow(resultant[0]**2 + resultant[1]**2, 0.5)
-				unit_res = resultant / res_mag
+				if res_mag != 0:
+					unit_res = resultant / res_mag
 				resultants[i] += resultant
 
 		# Move all points

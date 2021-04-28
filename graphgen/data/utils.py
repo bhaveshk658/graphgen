@@ -35,13 +35,17 @@ def t1_force(t):
     M = 10
     N = 1
     s1 = 5
-    s2 = 0
+    s2 = 5 # 0
     sig_square = s1**2 + s2**2
+
+    s = s1**2 + s2**2
+    A = -(M * N) / sqrt(2*pi*s)
+    return A * exp(-(t**2) / (2*s)) * (-t/s)
     #return (M*N*t/(ss*sqrt(2*pi*ss))) * exp(-(t**2)/(2*ss))
-    return ((M*N)/(sqrt(2*pi*sig_square))) * ((2*t*exp((-t**2)/(2*sig_square)))/(2*sig_square))
+    #return ((M*N)/(sqrt(2*pi*sig_square))) * ((2*t*exp((-t**2)/(2*sig_square)))/(2*sig_square))
 
 def t2_force(p, orig):
-    return 0.05*array_dist(p, orig)
+    return 0.005*array_dist(p, orig)
 
 def ccw(A, B, C):
     """
