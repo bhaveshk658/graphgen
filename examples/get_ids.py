@@ -60,12 +60,17 @@ for trace in traces:
 
 final_nodes = []
 for group in groups:
-    target_nodes = [nodes[i] for i in group]
-    G = convert_to_graph(target_nodes, dist_limit=3)
-    final_nodes.append(G.get_lane_nodes())
+    if len(group) == 1:
+        target_nodes = nodes[group[0]]
+        final_nodes.append(target_nodes)
+    else:
+        target_nodes = [nodes[i] for i in group]
+        G = convert_to_graph(target_nodes)
+        final_nodes.append(G.get_lane_nodes())
 
-G = convert_to_graph(final_nodes, dist_limit=2, heading_limit=0.72)
+G = convert_to_graph(final_nodes, dist_limit=2.7, heading_limit=0.72)
 G.draw()
+plt.show()
 
 plt.savefig("graph.png")
 
@@ -74,7 +79,7 @@ for i in range(len(edges)):
     p1 = edges[i][0]
     p2 = edges[i][1]
 
-    id1 = random.randint(5000, 100000)
+    id1 = random.randint(5000, 1000000)
 
     linestring = LineString3d(-i, [Point3d(id1, p1.x, p1.y, 0), Point3d(id1+1, p2.x, p2. y, 0)])
     lanelet = Lanelet(i, linestring, linestring)

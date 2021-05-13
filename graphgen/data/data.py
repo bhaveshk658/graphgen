@@ -79,7 +79,7 @@ def gravity(traces):
 	rand_index= random.randrange(1, len(points)-1, 1)
 	# Number of iterations
 	k = 0
-	resultant_threshold = 0.15
+	resultant_threshold = 0.2
 	repeat = True
 	print("Iteration will stop when resultant is less than " + str(resultant_threshold))
 	print("Processing " + str(len(points)) + " points (" + str(len(traces)) + ") traces")
@@ -168,7 +168,7 @@ def gravity(traces):
 		max_res = max(resultants, key=lambda v: pow(v[0]**2+ v[1]**2, 0.5))
 		max_res_mag = pow(max_res[0]**2 + max_res[1]**2, 0.5)
 		print("Max resultant: " + str(max_res_mag))
-		if max_res_mag < 0.1:
+		if max_res_mag < resultant_threshold:
 			repeat = False
 
 

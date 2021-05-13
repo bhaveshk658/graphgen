@@ -32,10 +32,10 @@ def proj(v1, v2):
     return np.dot(v1, v2)/np.linalg.norm(v2)
 
 def t1_force(t):
-    M = 10
-    N = 1
-    s1 = 5
-    s2 = 5 # 0
+    M = 0.01
+    N = 15
+    s1 = 2
+    s2 = 0.3
     sig_square = s1**2 + s2**2
 
     s = s1**2 + s2**2

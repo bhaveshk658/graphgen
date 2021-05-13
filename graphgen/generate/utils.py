@@ -129,7 +129,9 @@ def dist_point_to_line_nx(A, B, E):
         y1 = AB[1]  
         x2 = AE[0]  
         y2 = AE[1]  
-        mod = sqrt(x1 * x1 + y1 * y1)  
+        mod = sqrt(x1 * x1 + y1 * y1)
+        if mod == 0:
+            print(A, B, E)  
         reqAns = abs(x1 * y2 - y1 * x2) / mod  
       
     return reqAns
