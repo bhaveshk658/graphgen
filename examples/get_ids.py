@@ -52,25 +52,24 @@ for i in range(len(traces)):
         groups.append([i])
 
 
-traces = compute_headings(traces)
 nodes = []
 for trace in traces:
     node_trace = [Node(point[0], point[1], point[2]) for point in trace]
     nodes.append(node_trace)
 
 final_nodes = []
-for group in groups:
-    if len(group) == 1:
-        target_nodes = nodes[group[0]]
-        final_nodes.append(target_nodes)
-    else:
-        target_nodes = [nodes[i] for i in group]
-        G = convert_to_graph(target_nodes)
-        final_nodes.append(G.get_lane_nodes())
 
-G = convert_to_graph(final_nodes, dist_limit=2.7, heading_limit=0.72)
+for group in groups:
+    # if len(group) == 1:
+    #     target_nodes = nodes[group[0]]
+    #     final_nodes.append(target_nodes)
+    # else:
+    target_nodes = [nodes[i] for i in group]
+    G = convert_to_graph(target_nodes)
+    final_nodes.append(G.get_lane_nodes())
+
+G = convert_to_graph(final_nodes, dist_limit=2, heading_limit=0.785398)
 G.draw()
-plt.show()
 
 plt.savefig("graph.png")
 
