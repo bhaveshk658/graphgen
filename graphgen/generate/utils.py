@@ -1,4 +1,6 @@
 from math import sqrt
+import networkx as nx
+import matplotlib.pyplot as plt
 
 def distance(x1, y1, x2, y2):
     """
@@ -71,17 +73,17 @@ def dist_point_to_line(A, B, E):
       
     return reqAns
 
-def dist_point_to_line_nx(A, B, E):
+def dist_point_to_line_nx(G, a, b, e):
     """
     Distance from Node E to edge A->B. Adapted from GeeksforGeeks.
     Args:
         A - Node in nx.DiGraph()
-        B - Nodein nx.DiGraph()
+        B - Node in nx.DiGraph()
         E - np.array([x, y, heading])
     """
-    A = [A['x'], A['y']]
-    B = [B['x'], B['y']]
-    E = [E[0], E[1]]
+    A = [G.nodes[a]['x'], G.nodes[a]['y']]
+    B = [G.nodes[b]['x'], G.nodes[b]['y']]
+    E = [e[0], e[1]]
     # vector AB  
     AB = [None, None]  
     AB[0] = B[0] - A[0]  
@@ -131,7 +133,12 @@ def dist_point_to_line_nx(A, B, E):
         y2 = AE[1]  
         mod = sqrt(x1 * x1 + y1 * y1)
         if mod == 0:
+            print(G.nodes)
+            print(G.edges)
             print(A, B, E)  
+            print(a, b, e)
+            nx.draw(G, nx.get_node_attributes(G, 'pos'))
+            plt.show()
         reqAns = abs(x1 * y2 - y1 * x2) / mod  
       
     return reqAns
