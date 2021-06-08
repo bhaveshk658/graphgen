@@ -18,7 +18,6 @@ print("Loading...")
 traces = np.load(file="traces.npy", allow_pickle=True)
 
 
-
 map_path = os.path.abspath('../data/InteractionDR1.0/maps/DR_USA_Roundabout_EP.osm')
 draw_map(map_path)
 
