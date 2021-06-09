@@ -12,7 +12,7 @@ from lanelet2.projection import UtmProjector
 
 from graphgen.data import coordinate_to_id, draw_map, gravity, compute_headings
 from graphgen.graph import Graph, Node
-from graphgen.generate import convert_to_graph
+from graphgen.generate import convert_to_graph, convert_to_graph_nx
 
 print("Loading...")
 traces = np.load(file="traces.npy", allow_pickle=True)
@@ -51,35 +51,25 @@ for i in range(len(traces)):
         groups.append([i])
 
 
-nodes = []
-for trace in traces:
-    node_trace = [Node(point[0], point[1], point[2]) for point in trace]
-    nodes.append(node_trace)
+# for group in groups:
+#     target_nodes = [traces[i] for i in group]
+#     G = convert_to_graph_nx(target_nodes)
+#     print([G.number_of_nodes(), G.number_of_edges()])
 
-final_nodes = []
 
-for group in groups:
-    # if len(group) == 1:
-    #     target_nodes = nodes[group[0]]
-    #     final_nodes.append(target_nodes)
-    # else:
-    target_nodes = [nodes[i] for i in group]
-    G = convert_to_graph(target_nodes)
-    final_nodes.append(G.get_lane_nodes())
+# # G = convert_to_graph(final_nodes, dist_limit=2, heading_limit=0.785398)
+# # G.draw()
 
-G = convert_to_graph(final_nodes, dist_limit=2, heading_limit=0.785398)
-G.draw()
+# # plt.savefig("graph.png")
 
-plt.savefig("graph.png")
+# # edges = G.edges()
+# # for i in range(len(edges)):
+# #     p1 = edges[i][0]
+# #     p2 = edges[i][1]
 
-edges = G.edges()
-for i in range(len(edges)):
-    p1 = edges[i][0]
-    p2 = edges[i][1]
+# #     id1 = random.randint(5000, 1000000)
 
-    id1 = random.randint(5000, 1000000)
-
-    linestring = LineString3d(-i, [Point3d(id1, p1.x, p1.y, 0), Point3d(id1+1, p2.x, p2. y, 0)])
-    lanelet = Lanelet(i, linestring, linestring)
-    mapLoad.add(lanelet)
-llt.io.write("new.osm", mapLoad, projector)
+# #     linestring = LineString3d(-i, [Point3d(id1, p1.x, p1.y, 0), Point3d(id1+1, p2.x, p2. y, 0)])
+# #     lanelet = Lanelet(i, linestring, linestring)
+# #     mapLoad.add(lanelet)
+# # llt.io.write("new.osm", mapLoad, projector)

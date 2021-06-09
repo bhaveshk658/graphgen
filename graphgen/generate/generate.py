@@ -69,7 +69,19 @@ def clean(G, volume_threshold):
 	H.remove_edges_from(edges_to_remove)
 	return H
 
+def get_lane_points(G):
+	"""
+	Given G represents a lane, get all lane points in order.
+	"""
+	for n in G.__iter__():
+		if G.in_degree(n) == 0 and G.out_degree(n) == 1:
+			break
+	points = [[G.nodes[n]['x'], G.nodes[n]['y'], G.nodes[n]['heading']]]
+	while G.out_degree(n) != 0:
+		n = list(G.neighbors(n))[0]
+		points.append([G.nodes[n]['x'], G.nodes[n]['y'], G.nodes[n]['heading']])
 
+	return points
 
 
 def to_merge(candidate, G, dist_limit, heading_limit):
