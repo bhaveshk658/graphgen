@@ -60,6 +60,34 @@ def convert_to_graph_nx(trips, dist_limit=3, heading_limit=0.78):
 				node_count += 1
 	return G
 
+def convert_lanes_to_graph(lanes, dist_limit=3, heading_limit=0.78):
+	G = nx.DiGraph()
+	node_count = 0
+	for t in lanes:
+		prevNode = None
+		for n in t:
+			closest_node = to_merge_nx(n, G, dist_limit, heading_limit)
+			if closest_node:
+				if prevNode:
+					path_exists = nx.has_path(G, prevNode, closest_node)
+					path_is_short = path_exists and nx.dijkstra_path_length(G, prevNode, closest_node) < 5
+
+					if not path_exists or not path_is_short:
+						G.add_edge(prevNode, closest_node, volume=n[3])
+					elif path_is_short:
+						path = nx.dijkstra_path(G, prevNode, closest_node)
+						for i in range(len(path)-1):
+							G.edges[path[i], path[i+1]]['volume'] += n[3]
+				prevNode = closest_node
+			else:
+				G.add_node(node_count, x=n[0], y=n[1], heading=n[2], pos = (n[0], n[1]))
+				if prevNode:
+					G.add_edge(prevNode, node_count, volume=n[3])
+				prevNode = node_count
+				node_count += 1
+
+	return G
+
 def clean(G, volume_threshold):
 	"""
 	Removes all edges in G with volume < volume_threshold.
@@ -67,6 +95,8 @@ def clean(G, volume_threshold):
 	H = G.copy()
 	edges_to_remove = [e for e in H.edges if H.edges[e]['volume'] < volume_threshold]
 	H.remove_edges_from(edges_to_remove)
+	nodes_to_remove = [n for n in H.nodes if H.in_degree(n) + H.out_degree(n) == 0]
+	H.remove_nodes_from(nodes_to_remove)
 	return H
 
 def get_lane_points(G):
@@ -76,10 +106,12 @@ def get_lane_points(G):
 	for n in G.__iter__():
 		if G.in_degree(n) == 0 and G.out_degree(n) == 1:
 			break
-	points = [[G.nodes[n]['x'], G.nodes[n]['y'], G.nodes[n]['heading']]]
+	# [x, y, heading, volume of incoming edge]
+	points = [[G.nodes[n]['x'], G.nodes[n]['y'], G.nodes[n]['heading'], -1]]
 	while G.out_degree(n) != 0:
-		n = list(G.neighbors(n))[0]
-		points.append([G.nodes[n]['x'], G.nodes[n]['y'], G.nodes[n]['heading']])
+		next = list(G.neighbors(n))[0]
+		points.append([G.nodes[next]['x'], G.nodes[next]['y'], G.nodes[next]['heading'], G[n][next]['volume']])
+		n = next
 
 	return points
 

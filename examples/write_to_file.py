@@ -8,7 +8,7 @@ path = "/Users/bkalisetti658/desktop/graphgen/data/InteractionDR1.0/recorded_tra
 
 # Get data within a certain box
 print("Fetching data...")
-traces = get_training_data(1, path)
+traces = get_training_data(3, path)
 
 print("Cleaning data...")
 traces = clean(traces, length_threshold=50, dist_threshold=2)
@@ -19,4 +19,4 @@ print("Computing headings")
 traces = compute_headings(traces)
 
 print("Saving...")
-np.save(file="traces", arr=traces)
+np.save(file="traces3", arr=traces)
