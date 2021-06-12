@@ -23,7 +23,14 @@ def theta(v1, v2):
     """
     Computes angle between two vectors
     """
-    return np.arccos(v1.dot(v2)/(np.linalg.norm(v1)*np.linalg.norm(v2)))
+    val = v1.dot(v2)/(np.linalg.norm(v1)*np.linalg.norm(v2))
+    if val > 1:
+        print(val, v1, v2)
+        return np.arccos(1)
+    elif val < -1:
+        print(val, v1, v2)
+        return np.arccos(-1)
+    return np.arccos(val)
 
 def proj(v1, v2):
     """

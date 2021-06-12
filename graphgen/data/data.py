@@ -15,7 +15,7 @@ from graphgen.graph import Node
 MAX_NUM = float('inf')
 MIN_NUM = -float('inf')
 
-def get_training_data(n, location, box=None, xmin=MIN_NUM, xmax=MAX_NUM, ymin=MIN_NUM, ymax=MAX_NUM):
+def get_training_data(file_nums, location, xmin=MIN_NUM, xmax=MAX_NUM, ymin=MIN_NUM, ymax=MAX_NUM):
 	"""
 	Get training data from n files from string location.
 	E.g. get_training_data(4, "path/to/data", xmin, xmax, ymin, ymax)
@@ -23,7 +23,12 @@ def get_training_data(n, location, box=None, xmin=MIN_NUM, xmax=MAX_NUM, ymin=MI
 	"""
 	traces = []
 
-	for file_num in range(n):
+	if isinstance(file_nums, int):
+		file_nums = range(file_nums)
+
+
+	for file_num in file_nums:
+		print("Processing file " + str(file_num))
 		path = os.path.join(location, "vehicle_tracks_00"+str(file_num)+".csv")
 		data = read_csv(path)
 
@@ -61,11 +66,14 @@ def clean(traces, length_threshold, dist_threshold):
 				continue
 			cleaned_trace.append([trace[i][0], trace[i][1]])
 			point = trace[i]
+
+		if len(cleaned_trace) < 2:
+			continue
 		cleaned_traces.append(np.array(cleaned_trace))
 
 	return np.array(cleaned_traces, dtype="object")
 
-def gravity(traces):
+def gravity(traces, resultant_threshold, max_iter=10):
 	"""
 	Given a list of traces, perform Cao & Krumm preprocessing.
 	"""
@@ -79,11 +87,10 @@ def gravity(traces):
 	rand_index= random.randrange(1, len(points)-1, 1)
 	# Number of iterations
 	k = 0
-	resultant_threshold = 0.2
 	repeat = True
 	print("Iteration will stop when resultant is less than " + str(resultant_threshold))
 	print("Processing " + str(len(points)) + " points (" + str(len(traces)) + ") traces")
-	while repeat and k <= 20:
+	while repeat and k <= max_iter:
 		k += 1
 		print("Starting iteration " + str(k) + "...")
 

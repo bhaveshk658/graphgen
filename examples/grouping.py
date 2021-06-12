@@ -23,7 +23,7 @@ def coordinate_to_id(llt_map, x, y):
 	all_lanelets = [id_dict[int(x)] for x in np.unique(all_lanelets)]               # gets all unique lanelets
 	return all_lanelets
 
-traces = np.load(file="traces3.npy", allow_pickle=True)
+traces = np.load(file="traces.npy", allow_pickle=True)
 
 
 map_path = os.path.abspath('data/InteractionDR1.0/maps/DR_USA_Roundabout_EP.osm')
@@ -31,40 +31,6 @@ map_path = os.path.abspath('data/InteractionDR1.0/maps/DR_USA_Roundabout_EP.osm'
 projector = UtmProjector(llt.io.Origin(0, 0))
 mapLoad, errors = llt.io.loadRobust(map_path, projector)
 
-# ids = []
-# d = dict()
-# for i in range(len(traces)):
-#     trace = traces[i]
-#     trace_id = []
-#     for point in trace:
-#         res = coordinate_to_id(mapLoad, point[0], point[1])
-#         if len(res) == 0:
-#             res = float('inf')
-#         else:
-#             res.sort()
-#             res = res[0]
-#         if len(trace_id) == 0 or res != trace_id[-1]:
-#             trace_id.append(res)
-#     trace_id = tuple(trace_id)
-#     if trace_id in d:
-#         d[trace_id].append(i)
-#     else:
-#         d[trace_id] = [i]
-#     ids.append(trace_id)
-# print(d.values())
-
-# groups = []
-# group_ids = []
-# for i in range(len(traces)):
-#     trace_id = ids[i]
-#     trace = traces[i]
-#     if trace_id in group_ids:
-#         index = group_ids.index(trace_id)
-#         groups[index].append(i)
-#     else:
-#         group_ids.append(trace_id)
-#         groups.append([i])
-# print(groups)
 d = dict()
 ids = []
 for i in range(len(traces)):
@@ -83,23 +49,6 @@ for i in range(len(traces)):
         d[trace_id].append(i)
     else:
         d[trace_id] = [i]
-    # ids.append((trace_id[0], trace_id[1]))
-# print(len(ids), len(set(ids)))
-
-# # groups = []
-# # group_ids = []
-# # for i in range(len(traces)):
-# #     trace_id = ids[i]
-# #     trace = traces[i]
-# #     if trace_id in group_ids:
-# #         if trace_id in group_ids:
-# #             index = group_ids.index(trace_id)
-# #             groups[index].append(i)
-# #         else:
-# #             group_ids.append(trace_id)
-# #             groups.append([i])
-
-# # print(groups)
 
 with open('groups.x', 'wb') as f:
     pickle.dump(d, f)
