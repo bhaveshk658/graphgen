@@ -15,7 +15,7 @@ from graphgen.graph import Node
 MAX_NUM = float('inf')
 MIN_NUM = -float('inf')
 
-def get_training_data(file_nums, location, xmin=MIN_NUM, xmax=MAX_NUM, ymin=MIN_NUM, ymax=MAX_NUM):
+def get_training_data(file_nums, location, xmin=MIN_NUM, xmax=MAX_NUM, ymin=MIN_NUM, ymax=MAX_NUM, exclude=False, max_file_num=None):
 	"""
 	Get training data from n files from string location.
 	E.g. get_training_data(4, "path/to/data", xmin, xmax, ymin, ymax)
@@ -25,6 +25,12 @@ def get_training_data(file_nums, location, xmin=MIN_NUM, xmax=MAX_NUM, ymin=MIN_
 
 	if isinstance(file_nums, int):
 		file_nums = range(file_nums)
+
+	if exclude and max_file_num:
+		all_file_nums = [i for i in range(max_file_num+1)]
+		for num in file_nums:
+			all_file_nums.remove(num)
+		file_nums = all_file_nums
 
 
 	for file_num in file_nums:

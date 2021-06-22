@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 print("Loading...")
-traces = np.load(file="/Users/bkalisetti658/desktop/graphgen/data/DR_USA_Roundabout_EP/traces.npy", allow_pickle=True)
-# print(len(traces), sum([len(trace) for trace in traces]))
+traces = np.load(file="/Users/bkalisetti658/desktop/graphgen/data/DR_CHN_Roundabout_LN/raw_traces.npy", allow_pickle=True)
 
 for trace in tqdm(traces):
     for point in trace:
