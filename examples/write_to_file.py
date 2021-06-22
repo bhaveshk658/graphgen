@@ -4,14 +4,14 @@ from tqdm import tqdm
 
 from graphgen.data import get_training_data, clean, gravity, compute_headings
 
-path = "/Users/bkalisetti658/desktop/graphgen/data/InteractionDR1.0/recorded_trackfiles/DR_CHN_Roundabout_LN"
+path = "/Users/bkalisetti658/desktop/graphgen/data/InteractionDR1.0/recorded_trackfiles/DR_DEU_Merging_MT"
 
 # Get data within a certain box
 print("Fetching data...")
-traces = get_training_data([0, 1, 2, 3], path)
+traces = get_training_data([0, 1, 3, 4, 5, 6, 7, 10, 11, 12, 13], path)
 
 print("Saving...")
-np.save(file="/Users/bkalisetti658/desktop/graphgen/data/DR_CHN_Roundabout_LN/raw_traces.npy", arr=traces)
+np.save(file="/Users/bkalisetti658/desktop/graphgen/data/DR_DEU_Merging_MT/raw_traces.npy", arr=traces)
 
 # print("Cleaning data...")
 # traces = clean(traces, length_threshold=50, dist_threshold=2)

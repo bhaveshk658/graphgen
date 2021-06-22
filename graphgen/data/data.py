@@ -29,7 +29,10 @@ def get_training_data(file_nums, location, xmin=MIN_NUM, xmax=MAX_NUM, ymin=MIN_
 
 	for file_num in file_nums:
 		print("Processing file " + str(file_num))
-		path = os.path.join(location, "vehicle_tracks_00"+str(file_num)+".csv")
+		if file_num < 10:
+			path = os.path.join(location, "vehicle_tracks_00"+str(file_num)+".csv")
+		else:
+			path = os.path.join(location, "vehicle_tracks_0"+str(file_num)+".csv")
 		data = read_csv(path)
 
 		# Define rectangle of area to take points from.
